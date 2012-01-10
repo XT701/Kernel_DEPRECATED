@@ -27,14 +27,12 @@
 /* Chosen */
 #define DT_PATH_CHOSEN		"/Chosen@0"
 #define DT_PROP_CHOSEN_BP	"bp_model"
-#ifndef CONFIG_MACH_SHOLEST
 #define DT_PROP_CHOSEN_BP_LEN	16
 #define DT_PROP_CHOSEN_OMAP3630REV       "omap3630_rev"
 #define DT_PROP_CHOSEN_USB_PROD_NAME "usb_id_prod_name"
 #define DT_PROP_CHOSEN_USB_PIDS "usb_pids"
 #define DT_PROP_CHOSEN_USB_NLUNS "usb_nluns"
 #define DT_PROP_CHOSEN_MODEM_IFACE_NUM "modem_interface_num"
-#endif
 
 /* Keypad Node */
 #define DT_PATH_KEYPAD		"/System@0/Keypad@0"
@@ -44,21 +42,15 @@
 #define DT_PROP_KEYPAD_COLREG	"columnregister"
 #define DT_PROP_KEYPAD_MAPNUM	"mapnum"
 #define DT_PROP_KEYPAD_MAPS	"maps"
-#ifndef CONFIG_MACH_SHOLEST
 #define DT_PROP_KEYPAD_CLOSED_MAPS "closed_maps"
-#endif
 #define DT_PROP_KEYPAD_NAME	"name"
-#ifndef CONFIG_MACH_SHOLEST
 #define DT_PROP_KEYPAD_ADP5588  "adp5588_keypad"
-#endif
 
 /* Keyreset Node */
-#ifndef CONFIG_MACH_SHOLEST
 #define DT_PATH_KEYRESET	"/System@0/Keyreset@0"
 #define DT_PROP_KEYRESET_DOWN	"keydown"
 #define DT_PROP_KEYRESET_UP	"keyup"
 #define DT_PROP_KEYRESET_CRASH	"crash"
-#endif
 
 /* GPIODev Node */
 #define DT_PATH_GPIOGEV		"/System@0/GPIODev@0"
@@ -72,7 +64,6 @@
 #define DT_PROP_MUX_OFFMODEWKUPS	"offmodewkupsinit"
 
 /* Touch Node */
-#ifndef CONFIG_MACH_SHOLEST
 #define DT_PATH_TOUCH			"/System@0/I2C@0/TouchOBP@0"
 #define DT_PROP_TOUCH_KEYMAP		"touch_key_map"
 #define DT_PROP_TOUCH_I2C_ADDRESS       "i2c,address"
@@ -119,12 +110,9 @@
 
 /* BD7885 Node */
 #define DT_PATH_BD7885			"/System@0/I2C@0/XENONBD7885@0"
-#endif
 
-#ifndef CONFIG_MACH_SHOLEST
 /* I2C Node */
 #define DT_PATH_I2C           "/System@0/I2C@0"
-#endif
 
 /* GPIO Node */
 #define DT_PATH_GPIO        "/System@0/GPIO@0"
@@ -132,20 +120,13 @@
 
 /* CPCAP Node */
 #define DT_PATH_CPCAP			"/System@0/SPI@0/PowerIC@0"
-#ifndef CONFIG_MACH_SHOLEST
 #define DT_PROP_CPCAP_BUSNUM	"bus_num"
-#endif
 #define DT_PROP_CPCAP_SPIINIT	"spiinit"
-#ifndef CONFIG_MACH_SHOLEST
 #define DT_PROP_CPCAP_VIO_SUPPLY_CONVERTER "vio_supply_converter"
-#endif
 #define DT_PROP_CPCAP_RGTINIT	"regulator_init"
 #define DT_PROP_CPCAP_RGTMODE	"regulator_mode"
-#ifndef CONFIG_MACH_SHOLEST
 #define DT_PROP_CPCAP_RGTOFFMODE "regulator_off_mode"
-#endif
 
-#ifndef CONFIG_MACH_SHOLEST
 /* Display panel Node */
 #define DT_PATH_DISPLAY1	"/System@0/Display@0"
 #define DT_PATH_DISPLAY2	"/System@0/Display@1"
@@ -210,7 +191,6 @@
 
 /* Video out Node */
 #define DT_PATH_VIDEO_OUT	"/System@0/VideoOut@0"
-#endif
 
 /* Accelerometer Node */
 #define DT_PATH_ACCELEROMETER   "/System@0/I2C@0/Accelerometer@0"
@@ -220,7 +200,6 @@
 #define DT_PROP_ACCELEROMETER_NEGATE_X	"negate_x"
 #define DT_PROP_ACCELEROMETER_NEGATE_Y	"negate_y"
 #define DT_PROP_ACCELEROMETER_NEGATE_Z	"negate_z"
-#ifndef CONFIG_MACH_SHOLEST
 #define DT_PROP_ACCELEROMETER_SENS_LOW "sensitivity_low"
 #define DT_PROP_ACCELEROMETER_SENS_MEDIUM "sensitivity_medium"
 #define DT_PROP_ACCELEROMETER_SENS_HIGH "sensitivity_high"
@@ -261,7 +240,6 @@
 /* Modem Node */
 #define DT_PATH_MODEM	"/System@0/Modem@0"
 #define DT_PROP_MODEM_TYPE	"type"
-#endif
 
 #endif
 #endif

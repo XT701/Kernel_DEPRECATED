@@ -299,6 +299,19 @@ static int omap_mdm_ctrl_power_up_mdm6600(int bp_mode)
 static int mapphone_bp_get_type(void)
 {
 	int ret = 0;
+#ifdef CONFIG_ARM_OF
+	struct device_node *node;
+	const void *prop;
+	int size;
+	node = of_find_node_by_path(DT_PATH_MODEM);
+	if (node) {
+		prop = of_get_property(node, \
+			DT_PROP_MODEM_TYPE, &size);
+		if (prop && size)
+			ret = *(u32 *)prop;
+		of_node_put(node);
+	}
+#endif /* CONFIG_ARM_OF */
 	printk(KERN_INFO "Modem0 is 0x%08x\n", ret);
 	return ret;
 }

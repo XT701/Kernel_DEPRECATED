@@ -222,6 +222,90 @@ struct platform_device mapphone_reset_keys_device = {
 	.dev.platform_data = &mapphone_reset_keys_pdata,
 };
 
+#if defined(CONFIG_KEYBOARD_ADP5588) && defined(CONFIG_ARM_OF)
+static void mapphone_dt_adp5588_init(struct device_node *kp_node)
+{
+	struct device_node *kp_led_node;
+	const void *kp_prop;
+
+	/* Assume GPIO matrix keypad by default */
+	mapphone_adp5588_pdata.use_adp5588 = 0;
+
+	kp_prop = of_get_property(kp_node, DT_PROP_KEYPAD_ADP5588, NULL);
+	if (kp_prop)
+		mapphone_adp5588_pdata.use_adp5588 = *(u8 *)kp_prop;
+
+	if (!mapphone_adp5588_pdata.use_adp5588)
+		return;
+
+	printk(KERN_INFO "%s: Keypad device is ADP5588\n", __func__);
+
+	mapphone_keypad_matrix_info.info.func = gpio_event_adp5588_func;
+	mapphone_keypad_data.name = ADP5588_KEYPAD_NAME;
+
+	mapphone_adp5588_pdata.reset_gpio = get_gpio_by_name("adp5588_reset_b");
+
+	/* If RESET GPIO is not configured in device_tree, assume default */
+	if (mapphone_adp5588_pdata.reset_gpio < 0) {
+		printk(KERN_INFO "%s: ADP5588: RESET_GPIO not in device_tree\n",
+			__func__);
+		mapphone_adp5588_pdata.reset_gpio = ADP5588_RESET_GPIO;
+	}
+
+	mapphone_adp5588_pdata.int_gpio = get_gpio_by_name("adp5588_int_b");
+
+	/* If INT GPIO is not configured in device_tree, assume default */
+	if (mapphone_adp5588_pdata.int_gpio < 0) {
+		printk(KERN_INFO "%s: ADP5588: INT_GPIO not in device_tree\n",
+			__func__);
+		mapphone_adp5588_pdata.int_gpio = ADP5588_INT_GPIO;
+	}
+
+	/* Assume CPCAP keypad leds by default */
+	mapphone_adp5588_leds_pdata.use_leds = 0;
+
+	kp_led_node = of_find_node_by_path(DT_KPAD_LED);
+	if (kp_led_node) {
+		kp_prop = of_get_property(kp_led_node, \
+				DT_PROP_ADP5588_KPAD_LED, NULL);
+		if (kp_prop)
+			mapphone_adp5588_leds_pdata.use_leds = *(u8 *)kp_prop;
+
+		of_node_put(kp_led_node);
+	}
+}
+#endif
+
+#ifdef CONFIG_INPUT_KEYRESET
+static int mapphone_dt_kpreset_init(void)
+{
+	struct device_node *kpreset_node;
+	const void *kpreset_prop;
+	kpreset_node = of_find_node_by_path(DT_PATH_KEYRESET);
+	if (kpreset_node) {
+		kpreset_prop = of_get_property(kpreset_node, \
+				DT_PROP_KEYRESET_UP, NULL);
+		if (kpreset_prop)
+			memcpy(mapphone_reset_keys_up, kpreset_prop, \
+				sizeof(mapphone_reset_keys_up) - sizeof(int));
+
+		kpreset_prop = of_get_property(kpreset_node, \
+				DT_PROP_KEYRESET_DOWN, NULL);
+		if (kpreset_prop)
+			memcpy(mapphone_reset_keys_down, kpreset_prop, \
+				sizeof(mapphone_reset_keys_down) - sizeof(int));
+
+		kpreset_prop = of_get_property(kpreset_node, \
+				DT_PROP_KEYRESET_CRASH, NULL);
+		if (kpreset_prop)
+			mapphone_reset_keys_pdata.crash_key =\
+				*(int *)kpreset_prop;
+		of_node_put(kpreset_node);
+	}
+	return kpreset_node ? 0 : -ENODEV;
+}
+#endif
+
 #ifdef CONFIG_ARM_OF
 static int __init mapphone_dt_kp_init(void)
 {
@@ -259,6 +343,18 @@ static int __init mapphone_dt_kp_init(void)
 		if (slider_gpio < 0)
 			slider_gpio = GPIO_SLIDER;
 		mapphone_keypad_switch_map[0].gpio = slider_gpio;
+
+		kp_prop = of_get_property(kp_node, \
+				DT_PROP_KEYPAD_CLOSED_MAPS, NULL);
+		if (kp_prop) {
+			mapphone_keymap_closed = (unsigned short *)kp_prop;
+			mapphone_keypad_matrix_info.sw_fixup = fixup;
+		}
+
+#ifdef CONFIG_KEYBOARD_ADP5588
+		mapphone_dt_adp5588_init(kp_node);
+#endif
+
 		of_node_put(kp_node);
 	}
 
@@ -271,6 +367,11 @@ static int __init mapphone_init_keypad(void)
 #ifdef CONFIG_ARM_OF
 	if (mapphone_dt_kp_init())
 		printk(KERN_INFO "Keypad: using non-dt configuration\n");
+#endif
+
+#ifdef CONFIG_INPUT_KEYRESET
+	if (mapphone_dt_kpreset_init())
+		printk(KERN_INFO "Keypadreset init failed\n");
 #endif
 
 	/* keypad rows */

@@ -618,6 +618,24 @@ static void __init cpcap_of_init(void)
 		mapphone_umts_model = 1;
 	}
 
+	node = of_find_node_by_path(DT_PATH_CPCAP);
+	if (node == NULL) {
+		printk(KERN_ERR
+				"Unable to read node %s from device tree!\n",
+				DT_PATH_CPCAP);
+		return;
+	}
+
+	prop = of_get_property(node, DT_PROP_CPCAP_BUSNUM, NULL);
+	if (prop) {
+		mapphone_spi_board_info[0].bus_num = *(u16 *)prop;
+
+		printk(KERN_INFO "CPCAP: overwriting bus_num with %d\n", \
+			mapphone_spi_board_info[0].bus_num);
+	} else
+		printk(KERN_INFO "CPCAP: using default bus_num %d\n", \
+			mapphone_spi_board_info[0].bus_num);
+
 	unit_size = sizeof(struct omap_spi_init_entry);
 	prop = of_get_property(node, DT_PROP_CPCAP_SPIINIT, &size);
 	if ((!prop) || (size % unit_size)) {
@@ -662,6 +680,15 @@ static void __init cpcap_of_init(void)
 
 	for (i = 0; i < count; i++)
 		regulator_mode_init((struct omap_rgt_mode_entry *)prop + i);
+
+	unit_size = sizeof(struct omap_rgt_mode_entry);
+	prop = of_get_property(node, DT_PROP_CPCAP_RGTOFFMODE, &size);
+	if ((!prop) || (size % unit_size)) {
+		printk(KERN_ERR "Read property %s error!\n",
+				DT_PROP_CPCAP_RGTOFFMODE);
+		of_node_put(node);
+		return;
+	}
 
 	count = size / unit_size;
 	printk(KERN_INFO "cpcap init size = %d\n", count);

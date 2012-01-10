@@ -213,7 +213,7 @@ EXPORT_SYMBOL(is_sim_available);
 
 static void mapphone_sim_init(void)
 {
-#ifndef CONFIG_ARM_OF
+#ifdef CONFIG_ARM_OF
 	struct device_node *node;
 	const void *prop;
 
@@ -245,8 +245,43 @@ static void mapphone_sim_init(void)
 
 static int __init mapphone_audio_init(void)
 {
+	struct device_node *dt_node;
+	const void *dt_prop;
+	unsigned int is_uart_en = 0;
+	int hs_switch = -1;
+
 	gpio_request(MAPPHONE_AUDIO_PATH_GPIO, "mapphone audio path");
 	gpio_direction_output(MAPPHONE_AUDIO_PATH_GPIO, 1);
+
+	/* Enable headset audio unless uart debug is enabled in devtree */
+	dt_node = of_find_node_by_path(DT_HIGH_LEVEL_FEATURE);
+	if (NULL != dt_node) {
+		dt_prop = of_get_property(dt_node,
+				DT_HIGH_LEVEL_FEATURE_HEADSET_UART_EN, NULL);
+		if (NULL != dt_prop) {
+			is_uart_en = *(u8 *)dt_prop;
+			printk(KERN_INFO "feature_headset_uart_en %d\n",
+								is_uart_en);
+
+			/* Get the headset switch gpio number from devtree */
+			hs_switch = get_gpio_by_name("headset_uart_switch");
+			if (hs_switch < 0)
+				return -EINVAL;
+
+			/* configure headset switch gpio as output and
+			   direction based on devtree setting */
+			gpio_request(hs_switch,
+					"mapphone audio headset uart switch");
+
+			if (is_uart_en == 0) {
+				/* route audio out headset jack */
+				gpio_direction_output(hs_switch, 1);
+			} else {
+				/* route kernel uart out headset jack */
+				gpio_direction_output(hs_switch, 0);
+			}
+		}
+	}
 
 	return 0;
 }
@@ -329,7 +364,7 @@ static struct i2c_board_info __initdata mapphone_i2c_bus2_master_board_info[];
 
 static void mapphone_touch_init(void)
 {
-#ifndef CONFIG_ARM_OF
+#ifdef CONFIG_ARM_OF
 	struct device_node *touch_node;
 	const void *touch_prop;
 	int len = 0;
@@ -482,6 +517,143 @@ static void mapphone_als_init(void)
 	int lm3530_int_gpio = MAPPHONE_LM_3530_INT_GPIO;
 	int lm3530_reset_gpio;
 #ifdef CONFIG_ARM_OF
+	struct device_node *als_node;
+	const u8 *als_val;
+	int len = 0;
+	als_node = of_find_node_by_path(DT_LCD_BACKLIGHT);
+	if (als_node != NULL) {
+		als_val = of_get_property(als_node, DT_PROP_POWERUP_GEN_CNFG,
+									&len);
+		if (als_val && len)
+			omap3430_als_light_data.power_up_gen_config = *als_val;
+		else
+			pr_err("%s: Cann't get powerup gen cnfg\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_GEN_CNFG, &len);
+		if (als_val && len)
+			omap3430_als_light_data.gen_config = *als_val;
+		else
+			pr_err("%s: Cann't get gen cnfg\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ALS_CNFG, &len);
+		if (als_val && len)
+			omap3430_als_light_data.als_config = *als_val;
+		else
+			pr_err("%s: Cann't get als cnfg\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_BRIGHTNESS_RAMP,
+									&len);
+		if (als_val && len)
+			omap3430_als_light_data.brightness_ramp = *als_val;
+		else
+			pr_err("%s: Cann't get brightness ramp", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ALS_ZONE_INFO,
+									&len);
+		if (als_val && len)
+			omap3430_als_light_data.als_zone_info = *als_val;
+		else
+			pr_err("%s: Cann't get als zone info\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ALS_RESISTOR_SEL,
+									&len);
+		if (als_val && len)
+			omap3430_als_light_data.als_resistor_sel = *als_val;
+		else
+			pr_err("%s: Cann't get als resistor sel\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_BRIGHTNESS_CTRL,
+									&len);
+		if (als_val && len)
+			omap3430_als_light_data.brightness_control = *als_val;
+		else
+			pr_err("%s: Cann't get brightness control\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ZB0, &len);
+		if (als_val && len)
+			omap3430_als_light_data.zone_boundary_0 = *als_val;
+		else
+			pr_err("%s: Cann't get zone boundary 0\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ZB1, &len);
+		if (als_val && len)
+			omap3430_als_light_data.zone_boundary_1 = *als_val;
+		else
+			pr_err("%s: Cann't get zone boundary 1\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ZB2, &len);
+		if (als_val && len)
+			omap3430_als_light_data.zone_boundary_2 = *als_val;
+		else
+			pr_err("%s: Cann't get zone boundary 2\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ZB3, &len);
+		if (als_val && len)
+			omap3430_als_light_data.zone_boundary_3 = *als_val;
+		else
+			pr_err("%s: Cann't get zone boundary 3\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ZT0, &len);
+		if (als_val && len)
+			omap3430_als_light_data.zone_target_0 = *als_val;
+		else
+			pr_err("%s: Cann't get zone target 0\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ZT1, &len);
+		if (als_val && len)
+			omap3430_als_light_data.zone_target_1 = *als_val;
+		else
+			pr_err("%s: Cann't get zone target 1\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ZT2, &len);
+		if (als_val && len)
+			omap3430_als_light_data.zone_target_2 = *als_val;
+		else
+			pr_err("%s: Cann't get zone target 2\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ZT3, &len);
+		if (als_val && len)
+			omap3430_als_light_data.zone_target_3 = *als_val;
+		else
+			pr_err("%s: Cann't get zone target 3\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_ZT4, &len);
+		if (als_val && len)
+			omap3430_als_light_data.zone_target_4 = *als_val;
+		else
+			pr_err("%s: Cann't get zone target 4\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_MANUAL_CURRENT,
+									&len);
+		if (als_val && len)
+			omap3430_als_light_data.manual_current = *als_val;
+		else
+			pr_err("%s: Cann't get manual current\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_UPPER_CURR_SEL,
+									&len);
+		if (als_val && len)
+			omap3430_als_light_data.upper_curr_sel = *als_val;
+		else
+			pr_err("%s: Cann't get upper curr sel\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_LOWER_CURR_SEL,
+									&len);
+		if (als_val && len)
+			omap3430_als_light_data.lower_curr_sel = *als_val;
+		else
+			pr_err("%s: Cann't get lower curr sel\n", __func__);
+
+		als_val = of_get_property(als_node, DT_PROP_LENS_LOSS_COEFF,
+									&len);
+		if (als_val && len)
+			omap3430_als_light_data.lens_loss_coeff = *als_val;
+		else
+			pr_err("%s: Cann't get lens loss coeff\n", __func__);
+
+		of_node_put(als_node);
+	}
+
 	lm3530_int_gpio = get_gpio_by_name("lm3530_int");
 	if (lm3530_int_gpio < 0) {
 		printk(KERN_DEBUG"mapphone_als_init: cann't get lm3530_int from device_tree\n");
@@ -910,6 +1082,13 @@ static struct i2c_board_info __initdata
 #ifdef CONFIG_HDMI_TDA19989
 	{
 		I2C_BOARD_INFO("tda19989", 0x70),
+	},
+#endif
+
+#if CONFIG_KEYBOARD_ADP5588
+	{
+		I2C_BOARD_INFO(ADP5588_KEYPAD_NAME, ADP5588_I2C_ADDRESS),
+		.platform_data = &mapphone_adp5588_pdata,
 	},
 #endif
 
@@ -1906,7 +2085,7 @@ static void __init mapphone_init(void)
 	mapphone_als_init();
 	mapphone_panel_init();
 	mapphone_sensors_init();
-	mapphone_camera_init();
+	//mapphone_camera_init();
 	mapphone_touch_init();
 	mapphone_audio_init();
 	usb_musb_init();

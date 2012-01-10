@@ -232,17 +232,106 @@ static int mapphone_dt_get_dsi_panel_info(void)
 
 static int mapphone_dt_get_dsi_vm_info(void)
 {
-	return -ENODEV;
+	struct device_node *panel_node;
+	const void *panel_prop;
+
+	PANELDBG("dt_get_dsi_vm_info()\n");
+
+	/* return err if fail to open DT */
+	panel_node = of_find_node_by_path(DT_PATH_DISPLAY1);
+	if (panel_node == NULL)
+		return -ENODEV;
+
+	panel_prop = of_get_property(panel_node, "dsi_timing_hsa", NULL);
+	if (panel_prop != NULL)
+		mapphone_lcd_device.phy.dsi.vm_timing.hsa = *(u16 *)panel_prop;
+
+	panel_prop = of_get_property(panel_node, "dsi_timing_hfp", NULL);
+	if (panel_prop != NULL)
+		mapphone_lcd_device.phy.dsi.vm_timing.hfp = *(u16 *)panel_prop;
+
+	panel_prop = of_get_property(panel_node, "dsi_timing_hbp", NULL);
+	if (panel_prop != NULL)
+		mapphone_lcd_device.phy.dsi.vm_timing.hbp = *(u16 *)panel_prop;
+
+	panel_prop = of_get_property(panel_node, "dsi_timing_vsa", NULL);
+	if (panel_prop != NULL)
+		mapphone_lcd_device.phy.dsi.vm_timing.vsa = *(u16 *)panel_prop;
+
+	panel_prop = of_get_property(panel_node, "dsi_timing_vfp", NULL);
+	if (panel_prop != NULL)
+		mapphone_lcd_device.phy.dsi.vm_timing.vfp = *(u16 *)panel_prop;
+
+	panel_prop = of_get_property(panel_node, "dsi_timing_vbp", NULL);
+	if (panel_prop != NULL)
+		mapphone_lcd_device.phy.dsi.vm_timing.vbp = *(u16 *)panel_prop;
+
+	of_node_put(panel_node);
+
+	PANELDBG("DT: hsa=%d hfp=%d hbp=%d vsa=%d vfp=%d vbp=%d \n",
+		mapphone_lcd_device.phy.dsi.vm_timing.hsa,
+		mapphone_lcd_device.phy.dsi.vm_timing.hfp,
+		mapphone_lcd_device.phy.dsi.vm_timing.hbp,
+		mapphone_lcd_device.phy.dsi.vm_timing.vsa,
+		mapphone_lcd_device.phy.dsi.vm_timing.vfp,
+		mapphone_lcd_device.phy.dsi.vm_timing.vbp);
+
+	return 0;
 }
 
 static int mapphone_dt_get_tda19989_info(void)
 {
-	return -ENODEV;
+	struct device_node *panel_node;
+	const void *panel_prop;
+
+	PANELDBG("dt_get_tda19989_info()\n");
+
+	/* return err if fail to open DT */
+	panel_node = of_find_node_by_path(DT_PATH_DISPLAY2);
+	if (panel_node == NULL)
+		return -ENODEV;
+
+	panel_prop = of_get_property(panel_node, "gpio_pwr_en", NULL);
+	if (panel_prop != NULL)
+		mapphone_tda19989_data.pwr_en_gpio = *(u32 *)panel_prop;
+
+	panel_prop = of_get_property(panel_node, "gpio_int", NULL);
+	if (panel_prop != NULL)
+		mapphone_tda19989_data.int_gpio = *(u32 *)panel_prop;
+
+	panel_prop = of_get_property(panel_node, "cec_reg_name", NULL);
+	if (panel_prop != NULL) {
+		strncpy(mapphone_tda19989_data.cec_reg_name,
+				(char *)panel_prop,
+				(TDA19989_CEC_REGULATOR_NAME_SIZE - 1));
+		mapphone_tda19989_data.cec_reg_name \
+			[TDA19989_CEC_REGULATOR_NAME_SIZE - 1] = '\0';
+	}
+
+	return 0;
 }
 
 static int mapphone_dt_get_hdtv_info(void)
 {
-	return -ENODEV;
+	struct device_node *panel_node;
+	const void *panel_prop;
+
+	PANELDBG("dt_get_hdtv_info()\n");
+
+	/* return err if fail to open DT */
+	panel_node = of_find_node_by_path(DT_PATH_DISPLAY2);
+	if (panel_node == NULL)
+		return -ENODEV;
+
+	panel_prop = of_get_property(panel_node, "gpio_mux_en", NULL);
+	if (panel_prop != NULL)
+		mapphone_hdtv_mux_en_gpio = *(u32 *)panel_prop;
+
+	panel_prop = of_get_property(panel_node, "gpio_mux_select", NULL);
+	if (panel_prop != NULL)
+		mapphone_hdtv_mux_sel_gpio = *(u32 *)panel_prop;
+
+	return 0;
 }
 
 static int mapphone_dt_get_feature_info(void)

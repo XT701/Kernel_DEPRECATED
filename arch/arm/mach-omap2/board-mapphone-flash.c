@@ -112,6 +112,18 @@ static int omap_nand_dev_ready(struct omap_nand_platform_data *data)
  */
 void __init mapphone_flash_init(void)
 {
+	struct device_node *feature_node;
+	const void *nand_prop;
+
+	/* If this phone doesn't have a NAND, don't waste time probing it */
+	feature_node = of_find_node_by_path(DT_HIGH_LEVEL_FEATURE);
+	if (feature_node != NULL) {
+		nand_prop = of_get_property(feature_node,
+			DT_HIGH_LEVEL_FEATURE_NO_NAND, NULL);
+		if (nand_prop != NULL && *(u8 *)nand_prop == 1)
+			return;
+	}
+
 	/* We know the RDY/BSY line is connected now */
 	sdp_nand_data.dev_ready = omap_nand_dev_ready;
 

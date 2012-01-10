@@ -147,10 +147,6 @@ config MACH_MAPPHONE
         bool "Motorola Android Platform phone"
         depends on ARCH_OMAP3 && ARCH_OMAP34XX
 
-config MACH_SHOLEST
-        bool "Motorola sholes tablet"
-        depends on MACH_MAPPHONE
-
 config MACH_MAPPHONE_OC
         bool "Motorola Android Platform phone overclock"
         depends on MACH_MAPPHONE 

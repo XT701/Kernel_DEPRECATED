@@ -367,16 +367,59 @@ void __init mapphone_hsmmc_init(void)
 {
 	struct device_node *mmc_node;
 	const void *mmc_prop;
+
+#ifdef CONFIG_ARM_OF
+	mmc_node = of_find_node_by_path(DT_PATH_MMC1);
+	if (mmc_node) {
+		mmc_prop = of_get_property(mmc_node,
+			DT_PROP_MMC_PWR_SUPPLY, NULL);
+		if (mmc_prop) {
+			switch (*(int *)mmc_prop) {
+			case MMC_PWR_VSDIO:
+				strncpy(hsmmc_regulator_name, "vsdio",
+					REG_NAME_LEN);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+#endif
 	hsmmc_data[0] = &mmc1_data;
 
 	mmc1_data.slots[0].card_detect_irq = gpio_to_irq(GPIO_SIGNAL_MMC_DET);
 
 #if defined(CONFIG_OMAP_HS_MMC2)
+#ifdef CONFIG_ARM_OF
+	mmc_node = of_find_node_by_path(DT_PATH_MMC2);
+	if (mmc_node) {
+		mmc_prop = of_get_property(mmc_node,
+			DT_PROP_MMC_CARD_CONNECT, NULL);
+		if (mmc_prop) {
+			if (*(int *)mmc_prop == MMC_CARD_CONNECT_SDIO)
+				hsmmc_data[1] = &wifi_data;
+			else if (*(int *)mmc_prop == MMC_CARD_CONNECT_INTERNAL)
+				hsmmc_data[1] = &emmc_data;
+		}
+	} else
+		hsmmc_data[1] = &wifi_data;
+#else
 	hsmmc_data[1] = &wifi_data;
+#endif
 #endif
 
 #if defined(CONFIG_OMAP_HS_MMC3)
-	hsmmc_data[2] = &wifi_data;
+#ifdef CONFIG_ARM_OF
+	mmc_node = of_find_node_by_path(DT_PATH_MMC3);
+	if (mmc_node) {
+		mmc_prop = of_get_property(mmc_node,
+			DT_PROP_MMC_CARD_CONNECT, NULL);
+		if (mmc_prop) {
+			if (*(int *)mmc_prop == MMC_CARD_CONNECT_SDIO)
+				hsmmc_data[2] = &wifi_data;
+		}
+	}
+#endif
 #endif
 	omap2_init_mmc(hsmmc_data, OMAP34XX_NR_MMC);
 }

@@ -1349,12 +1349,80 @@ void mapphone_camera_mipi_lines_func_mode(void)
 
 void mapphone_init_reg_list()
 {
+#ifdef CONFIG_ARM_OF
+	struct device_node *feat_node;
+	const void *feat_prop;
+	char *prop_name;
+	char reg_name[CAM_MAX_REG_NAME_LEN];
+	int reg_entry;
+	int feature_name_len, i, j;
+
+	j = 0;
+	reg_entry = 0;
+
+	/* clear the regulator list */
+	memset(regulator_list, 0x0, sizeof(regulator_list));
+
+	/* get regulator info for this device */
+	feat_node = of_find_node_by_path(DT_HIGH_LEVEL_FEATURE);
+	if (NULL == feat_node)
+		return;
+
+	feat_prop = of_get_property(feat_node,
+				"feature_cam_regulators", NULL);
+	if (NULL != feat_prop) {
+		prop_name = (char *)feat_prop;
+		printk(KERN_INFO \
+			"Regulators for device: %s\n", prop_name);
+		feature_name_len = strlen(prop_name);
+
+		memset(reg_name, 0x0, CAM_MAX_REG_NAME_LEN);
+
+		for (i = 0; i < feature_name_len; i++) {
+
+			if (prop_name[i] != '\0' && prop_name[i] != ',')
+				reg_name[j++] = prop_name[i];
+
+			if (prop_name[i] == ',' ||\
+				 (i == feature_name_len-1)) {
+				printk(KERN_INFO \
+					"Adding %s to camera \
+						regulator list\n",\
+					reg_name);
+				if (reg_entry < CAM_MAX_REGS) {
+					strncpy(\
+						regulator_list[reg_entry++],\
+						reg_name,\
+						CAM_MAX_REG_NAME_LEN);
+					memset(reg_name, 0x0, \
+						CAM_MAX_REG_NAME_LEN);
+					j = 0;
+				} else {
+					break;
+				}
+			}
+
+		}
+	}
+#endif
     return;
 }
 
 static void mapphone_init_flash_list(void)
 {
-	bd7885_available = 1;
+#ifdef CONFIG_ARM_OF
+	struct device_node *node;
+	int len = 0;
+	const uint32_t *val;
+
+	node = of_find_node_by_path(DT_PATH_BD7885);
+	if (node != NULL) {
+		val =
+			of_get_property(node, "device_available", &len);
+		if (val && len)
+			bd7885_available =  *(u8 *)val;
+	}
+#endif
 }
 
 void __init mapphone_camera_init(void)
@@ -1365,7 +1433,35 @@ void __init mapphone_camera_init(void)
 	int flash_ready = 0;
 
 #ifdef CONFIG_ARM_OF
-			is_mipi_cam = 1;
+	/* Check sensor Type */
+	feat_node = of_find_node_by_path(DT_HIGH_LEVEL_FEATURE);
+	if (NULL != feat_node) {
+		feat_prop = of_get_property(feat_node,
+					"feature_mipi_cam", NULL);
+		if (NULL != feat_prop) {
+			is_mipi_cam = *(u8 *)feat_prop;
+			printk(KERN_INFO "feature_mipi_cam %d\n", is_mipi_cam) ;
+		}
+
+		feat_prop = of_get_property(feat_node,
+					"feature_smart_cam", NULL);
+		if (NULL != feat_prop) {
+			is_smart_cam = *(u8 *)feat_prop;
+			printk(KERN_INFO "feature_smart_cam %d\n", is_smart_cam) ;
+		}
+
+                if (is_smart_cam) {
+                    feat_prop = of_get_property(feat_node,
+                                                "feature_cam_dataline_shift", NULL);
+                    if (NULL != feat_prop) {
+                        u8 dataline_shift = 0 ;
+                        dataline_shift = *(u8 *)feat_prop ;
+                        printk(KERN_INFO "feature_cam_datalane_shift %d\n", dataline_shift) ;
+                        camise_if_config.dataline_shift = dataline_shift ;
+                    }
+                }
+
+	}
 
 	avdd_en_gpio = get_gpio_by_name("cam_avdd_en");
 	if (avdd_en_gpio >= 0) {

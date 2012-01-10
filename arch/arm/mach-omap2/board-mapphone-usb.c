@@ -274,16 +274,85 @@ int i;
 
 void __init usb_pid_mapping_init(void)
 {
-	return;
+	struct device_node *node;
+	const void *prop;
+	int i, size, unit_size;
+	char name[USB_FUNC_NAME_SIZE];
+
+	node = of_find_node_by_path(DT_PATH_CHOSEN);
+	if (node == NULL) {
+		printk(KERN_ERR
+			"Unable to read node %s from device tree!\n",
+			DT_PATH_CHOSEN);
+		return;
+	}
+
+	unit_size = sizeof(struct omap_usb_pid_entry);
+	prop = of_get_property(node, DT_PROP_CHOSEN_USB_PIDS, &size);
+	if ((!prop) || (size % unit_size)) {
+		printk(KERN_ERR "Read property %s error!\n",
+			DT_PROP_CHOSEN_USB_PIDS);
+			of_node_put(node);
+		return;
+	}
+
+	for (i = 0; i < size / unit_size; i++) {
+		struct omap_usb_pid_entry *p =
+		(struct omap_usb_pid_entry *) prop;
+
+		memcpy((void *) name, p->name, USB_FUNC_NAME_SIZE);
+		trim_usb_name_string(name);
+		android_usb_set_pid(name, p->usb_pid);
+		prop += unit_size;
+	}
+
+	of_node_put(node);
+	printk(KERN_INFO "DT overwrite of  USB PID's done!\n");
 }
 
 void mapphone_init_nluns(void)
 {
+	struct device_node *node;
+	const void *prop;
+
+	node = of_find_node_by_path(DT_PATH_CHOSEN);
+	if (node == NULL) {
+		pr_err("Unable to read node %s from device tree!\n",
+			DT_PATH_CHOSEN);
+		return;
+	}
+	prop = of_get_property(node, DT_PROP_CHOSEN_USB_NLUNS, NULL);
+	if (prop) {
+		pr_err("USB Overwrite nLuns %d\n", *(char *)prop);
+		usbms_plat.nluns = *(char *)prop;
+	}
+
+	of_node_put(node);
 	return;
 }
 
 void mapphone_get_product_name(void)
 {
+	struct device_node *node;
+	const void *prop;
+
+	node = of_find_node_by_path(DT_PATH_CHOSEN);
+	if (node == NULL) {
+		pr_err("Unable to read node %s from device tree!\n",
+			DT_PATH_CHOSEN);
+		return;
+	}
+
+	prop = of_get_property(node, DT_PROP_CHOSEN_USB_PROD_NAME, NULL);
+	if (prop) {
+		andusb_plat.product_name = (char *)prop;
+		usbms_plat.product = (char *)prop;
+	} else {
+		pr_err("Read property %s error!\n",
+		       DT_PROP_CHOSEN_USB_PROD_NAME);
+	}
+
+	of_node_put(node);
 	return;
 }
 
@@ -500,6 +569,30 @@ extern void set_cdma_modem_interface(unsigned int number);
 
 void mapphone_init_modem_interface(void)
 {
+	struct device_node *node;
+	const void *prop;
+	int rwkup_gpio = get_gpio_by_name("bp2ap_usb_rwkup");
+
+	if (rwkup_gpio < 0)
+		dummy_usb_config.usb_remote_wake_gpio =
+			MAPPHONE_BP_READY2_AP_GPIO;
+	else
+		dummy_usb_config.usb_remote_wake_gpio = rwkup_gpio;
+
+	node = of_find_node_by_path(DT_PATH_CHOSEN);
+	if (node == NULL) {
+		pr_err("Unable to read node %s from device tree!\n",
+			DT_PATH_CHOSEN);
+		return;
+	}
+	prop = of_get_property(node, DT_PROP_CHOSEN_MODEM_IFACE_NUM, NULL);
+	if (prop) {
+		pr_err("Setting the Modem Interface num to %d\n", *(u8 *)prop);
+		set_cdma_modem_interface(*(u8 *)prop);
+	} else
+		set_cdma_modem_interface(0);
+
+	of_node_put(node);
 	return;
 }
 

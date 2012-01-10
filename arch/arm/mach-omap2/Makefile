@@ -103,9 +103,9 @@ obj-$(CONFIG_MACH_SHOLES)		+= board-sholes.o \
 #					   board-sholes-usbnet.o \
 
 obj-$(CONFIG_MACH_MAPPHONE)             += board-mapphone.o \
+                                           board-mapphone-camera.o \
                                            board-mapphone-flash.o \
                                            board-mapphone-padconf.o \
-                                           board-mapphone-camera.o \
                                            board-mapphone-panel.o \
                                            board-mapphone-spi.o \
                                            board-mapphone-cpcap-client.o \

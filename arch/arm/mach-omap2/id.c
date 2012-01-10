@@ -50,7 +50,6 @@ EXPORT_SYMBOL(omap_rev);
 void get_omap3630_revision_id(void){
 
 #ifdef CONFIG_ARM_OF
-#ifndef CONFIG_MACH_SHOLEST
 	struct device_node *omaprev_node;
 	const void *omaprev_prop;
 
@@ -72,7 +71,6 @@ void get_omap3630_revision_id(void){
 		of_node_put(omaprev_node);
 	} else
 		printk(KERN_ERR"%s can not find Chosen@0 node\n", __func__);
-#endif
 #endif
 
 }
