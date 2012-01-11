@@ -407,12 +407,12 @@ static int try_pix_parm(struct omap34xxcam_videodev *vdev,
 
 	if (wanted_pix_out->pixelformat == V4L2_PIX_FMT_W1S_PATT)
 		best_pix_in->pixelformat = V4L2_PIX_FMT_W1S_PATT;
-	else {
+	/*else {
 		if (vdev->vfd->minor == CAM_DEVICE_SOC)
 			best_pix_in->pixelformat = V4L2_PIX_FMT_YUYV;
 		else
 			best_pix_in->pixelformat = V4L2_PIX_FMT_SGRBG10;
-	}
+	}*/
 	best_pix_out.height = INT_MAX >> 1;
 	best_pix_out.width = best_pix_out.height;
 

@@ -77,14 +77,12 @@
 #include <linux/adp5588_keypad.h>
 #endif
 
-#ifdef CONFIG_VIDEO_OMAP3
+#ifdef CONFIG_VIDEO_OLDOMAP3
 #include <media/v4l2-int-device.h>
 #if defined(CONFIG_VIDEO_MT9P012) || defined(CONFIG_VIDEO_MT9P012_MODULE)
 #include <media/mt9p012.h>
 #endif
-#if defined(CONFIG_VIDEO_OV8810) || defined(CONFIG_VIDEO_OV8810_MODULE)
 #include <media/ov8810.h>
-#endif
 #if defined(CONFIG_VIDEO_OV5650) || defined(CONFIG_VIDEO_OV5650_MODULE)
 #include <media/ov5650.h>
 #endif
@@ -1092,12 +1090,10 @@ static struct i2c_board_info __initdata
 	},
 #endif
 
-#if defined(CONFIG_VIDEO_OV8810)
 	{
 		I2C_BOARD_INFO("ov8810", OV8810_I2C_ADDR),
 		.platform_data = &mapphone_ov8810_platform_data,
 	},
-#endif
 
 #ifdef CONFIG_VIDEO_OMAP3_HPLENS
 	{
