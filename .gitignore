@@ -84,3 +84,7 @@ GTAGS
 *.orig
 *~
 \#*#
+
+# temp
+bootimg/*
+pack.sh
