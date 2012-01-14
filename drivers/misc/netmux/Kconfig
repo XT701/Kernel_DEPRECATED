@@ -12,4 +12,8 @@ config DEBUG_NETMUX
         bool "Builds netmux proc logging Interface"
         default n
 
+config NETMUX_LINKDRIVER_SOFTERROR
+        boolean "Turn panics in the linkdriver to printks"
+        default n
+
 endmenu
