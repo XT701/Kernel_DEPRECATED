@@ -27,12 +27,12 @@
 #include <linux/spi/cpcap.h>
 #include <linux/spi/spi.h>
 #include <linux/debugfs.h>
+#include <linux/seq_file.h>
 
 #ifdef CONFIG_PM_DEEPSLEEP
 #include <linux/suspend.h>
 #endif
 
-#include <linux/seq_file.h>
 
 #define NUM_INT_REGS      5
 #define NUM_INTS_PER_REG  16

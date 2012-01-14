@@ -18,9 +18,6 @@
 
 #include <linux/fs.h>
 #include <linux/miscdevice.h>
-#include <linux/leds-cpcap-display.h>
-#include <linux/leds-cpcap-button.h>
-#include <linux/leds-ld-cpcap.h>
 #include <linux/platform_device.h>
 #include <linux/regulator/machine.h>
 #include <linux/spi/spi.h>
@@ -228,15 +225,6 @@ static int cpcap_reboot(struct notifier_block *this, unsigned long code,
 	if (ret) {
 		dev_err(&(misc_cpcap->spi->dev),
 			"Clear Power Cut bit failure.\n");
-		result = NOTIFY_BAD;
-	}
-
-	/* Always clear the CPCAP_BIT_UCRESET_I bit */
-	ret = cpcap_regacc_write(misc_cpcap, CPCAP_REG_INT3,
-		1, CPCAP_BIT_UCRESET_I);
-	if (ret) {
-		dev_err(&(misc_cpcap->spi->dev),
-			"Clear UC RESET bit failure.\n");
 		result = NOTIFY_BAD;
 	}
 
