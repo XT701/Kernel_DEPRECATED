@@ -38,6 +38,7 @@
 #define CPCAP_IRQ_INT3_INDEX 32
 #define CPCAP_IRQ_INT4_INDEX 48
 #define CPCAP_IRQ_INT5_INDEX 64
+#define CPCAP_HWCFG1_SEC_STBY_VWLAN1    0x0001
 
 enum cpcap_regulator_id {
 	CPCAP_SW5,

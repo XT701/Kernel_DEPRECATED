@@ -2,6 +2,9 @@
 # Makefile for the linux kernel.
 #
 
+CFLAGS_REMOVE_common.o = -pg
+CFLAGS_REMOVE_io.o = -pg
+
 # Common support
 obj-y := common.o sram.o clock.o devices.o dma.o mux.o gpio.o \
 	 usb.o fb.o io.o

@@ -185,10 +185,19 @@ config EMU_UART_DEBUG
 	  This feature is specific for Motorola phone with CPCAP power IC.
 	  If this option is selected, USB functionality is NOT available any more.
 
+config OMAP3_EXPORT_DIE_ID
+       bool "Export DIE ID code under /proc/socinfo"
+       depends on ARCH_OMAP3
+       default n
+       help
+         Say Y here if you need DIE ID code to be exported via /proc/socinfo
+         in production systems. You will need also to explicitly flag it by
+         appending the "omap3_die_id" parameter to your boot command line.
 
-config PROC_OMAP_PHONE_ID
-        bool "/proc/phoneid support"
-        depends on PROC_FS && ARCH_OMAP34XX
+config PM_DEEPSLEEP
+	bool "instant on feature"
 	default n
 	help
-	  Exports the DIE_ID reg value.
+	  if enabling this feature, when PM state is set to DEEPSLEEP, the kerne
+	  ignore all key press except long press power key.
+

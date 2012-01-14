@@ -119,6 +119,7 @@ obj-$(CONFIG_MACH_MAPPHONE)             += board-mapphone.o \
                                            board-mapphone-usb.o
 obj-$(CONFIG_MOT_FEAT_MDTV)             += board-mapphone-mdtv.o
 obj-$(CONFIG_EMU_UART_DEBUG)		+= board-mapphone-emu_uart.o
+obj-$(CONFIG_HAVE_TRACE_CLOCK)		+= trace-clock.o
 obj-$(CONFIG_MACH_NOKIA_RX51)		+= board-rx51.o \
 					   board-rx51-sdram.o \
 					   board-rx51-peripherals.o \
@@ -153,4 +154,3 @@ obj-y					+= $(onenand-m) $(onenand-y)
 
 smc91x-$(CONFIG_SMC91X)			:= gpmc-smc91x.o
 obj-y					+= $(smc91x-m) $(smc91x-y)
-obj-$(CONFIG_PROC_OMAP_PHONE_ID)       	+= phoneid.o
