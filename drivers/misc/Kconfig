@@ -420,9 +420,7 @@ source "drivers/misc/cb710/Kconfig"
 source "drivers/misc/ts27010mux/Kconfig"
 source "drivers/misc/modem_pm_driver/Kconfig
 source "drivers/misc/smc/Kconfig"
-source "drivers/misc/sec/Kconfig"
 source "drivers/misc/netmux/Kconfig"
-source "drivers/misc/netmux_linkdriver/Kconfig"
 source "drivers/misc/camera_misc/Kconfig"
 
 endif # MISC_DEVICES
