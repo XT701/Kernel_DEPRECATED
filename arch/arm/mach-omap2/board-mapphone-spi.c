@@ -203,8 +203,8 @@ static struct regulator_init_data cpcap_regulator[CPCAP_NUM_REGULATORS] = {
 	},
 	[CPCAP_VCAM] = {
 		.constraints = {
-			.min_uV			= 2900000,
-			.max_uV			= 2900000,
+			.min_uV			= 2800000,
+			.max_uV			= 2800000,
 			.valid_ops_mask		= REGULATOR_CHANGE_STATUS,
 			.apply_uV		= 1,
 
@@ -305,7 +305,7 @@ static struct regulator_init_data cpcap_regulator[CPCAP_NUM_REGULATORS] = {
 		.constraints = {
 			.min_uV			= 1800000,
 			.max_uV			= 1900000,
-			.valid_ops_mask		= 0,
+			.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE,
 		},
 		.num_consumer_supplies	= ARRAY_SIZE(cpcap_vwlan1_consumers),
 		.consumer_supplies	= cpcap_vwlan1_consumers,
