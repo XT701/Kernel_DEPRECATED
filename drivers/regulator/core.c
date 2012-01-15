@@ -1277,27 +1277,10 @@ static int _regulator_enable_(struct regulator_dev *rdev)
 	    (rdev->constraints->valid_ops_mask & REGULATOR_CHANGE_DRMS))
 		drms_uA_update(rdev);
 
-	if (rdev->use_count == 0) {
-		/* The regulator may on if it's not switchable or left on */
-		ret = _regulator_is_enabled(rdev);
-		if (ret == -EINVAL || ret == 0) {
-			if (!_regulator_can_change_status(rdev))
-				return -EPERM;
-
-			if (rdev->desc->ops->enable) {
-				ret = rdev->desc->ops->enable(rdev);
-				if (ret < 0)
-					return ret;
-			} else {
-				return -EINVAL;
-			}
-		} else if (ret < 0) {
 			printk(KERN_ERR "%s: is_enabled() failed for %s: %d\n",
 			       __func__, rdev->desc->name, ret);
 			return ret;
-		}
 		/* Fallthrough on positive return values - already enabled */
-	}
 
 	rdev->use_count++;
 
