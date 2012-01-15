@@ -131,6 +131,7 @@ void regulator_put(struct regulator *regulator);
 
 /* regulator output control and status */
 int regulator_enable(struct regulator *regulator);
+int regulator_enable_(struct regulator *regulator);
 int regulator_disable(struct regulator *regulator);
 int regulator_force_disable(struct regulator *regulator);
 int regulator_is_enabled(struct regulator *regulator);

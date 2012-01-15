@@ -270,7 +270,7 @@ static int ov8810_sensor_power_set(struct device *dev, \
 				}
 			}
 			
-			if (regulator_enable(regulator_vwlan1) != 0) {
+			if (regulator_enable_(regulator_vwlan1) != 0) {
 				pr_err("%s: Cannot enable vcam regulator_vwlan1\n",
 						__func__);
 			}
