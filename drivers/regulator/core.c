@@ -1333,7 +1333,7 @@ int regulator_enable_(struct regulator *regulator)
 	int ret = 0;
 
 	mutex_lock(&rdev->mutex);
-	ret = _regulator_enable(rdev);
+	ret = _regulator_enable_(rdev);
 	mutex_unlock(&rdev->mutex);
 	return ret;
 }
