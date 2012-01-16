@@ -1,7 +1,7 @@
 #!/bin/bash
-PS3="Choose (1-3):"
+PS4="Choose (1-4):"
 echo "Choose from the list below."
-select name in CyanogenMod6 CyanogenMod7 StockEclair
+select name in CyanogenMod6 CyanogenMod7 CyanogenMod9 StockEclair
 do
 	break
 done
