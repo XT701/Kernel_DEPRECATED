@@ -141,6 +141,10 @@ static void qtouch_ts_early_suspend(struct early_suspend *handler);
 static void qtouch_ts_late_resume(struct early_suspend *handler);
 #endif
 
+#ifdef CONFIG_QTOUCH_RATELIMIT
+bool qtouch_send_next = false;
+#endif
+
 static struct workqueue_struct *qtouch_ts_wq;
 #ifdef PALM_TCH_CAL_RECOVER
 static struct workqueue_struct *qtouch_ts_cal_wq;
@@ -1089,6 +1093,14 @@ static int do_touch_multi_msg(struct qtouch_ts_data *ts, struct qtm_object *obj,
 		ts->finger_data[finger].down = down;
 	}
 
+
+	#ifdef CONFIG_QTOUCH_RATELIMIT
+	qtouch_send_next = !down || !qtouch_send_next;
+	if (!qtouch_send_next) {
+		return 0;
+	}
+	#endif
+
 	for (i = 0; i < ts->pdata->multi_touch_cfg.num_touch; i++) {
 		if (ts->finger_data[i].down == 0)
 			continue;
@@ -1121,6 +1133,10 @@ static int do_touch_multi_msg(struct qtouch_ts_data *ts, struct qtm_object *obj,
 	if (!down) {
 		memset(&ts->finger_data[finger], 0,
 		sizeof(struct coordinate_map));
+		#ifdef CONFIG_QTOUCH_RATELIMIT
+		/* Send first down event */
+		qtouch_send_next = false;
+		#endif
 	}
 
 	return 0;
