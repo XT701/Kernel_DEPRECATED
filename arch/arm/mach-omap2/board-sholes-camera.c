@@ -1,5 +1,5 @@
 /*
- * linux/arch/arm/mach-omap2/board-mapphone-camera.c
+ * linux/arch/arm/mach-omap2/board-sholes-camera.c
  *
  * Copyright (C) 2009 Motorola, Inc.
  *
@@ -140,7 +140,8 @@ static struct isp_interface_config mt9p012_if_config = {
 static int mt9p012_sensor_power_set(struct device *dev, enum v4l2_power power)
 {
 	static enum v4l2_power previous_power = V4L2_POWER_OFF;
-	static struct regulator *regulator;
+	static struct regulator *regulator_vcam;
+	static struct regulator *regulator_vwlan1;
 
 	switch (power) {
 	case V4L2_POWER_OFF:
@@ -148,13 +149,28 @@ static int mt9p012_sensor_power_set(struct device *dev, enum v4l2_power power)
 		gpio_free(GPIO_MT9P012_RESET);
 
 		/* Turn off power */
-		if (regulator != NULL) {
-			regulator_disable(regulator);
-			regulator_put(regulator);
-			regulator = NULL;
+		if (regulator_vcam != NULL) {
+			regulator_disable(regulator_vcam);
+			regulator_put(regulator_vcam);
+			regulator_vcam = NULL;
 		} else {
 			sholes_camera_lines_safe_mode();
 			pr_err("%s: Regulator for vcam is not "\
+					"initialized\n", __func__);
+			return -EIO;
+		}
+
+		/* Delay 6 msec for vcam to drop (4.7uF to 10uF change) */
+		msleep(6);
+
+		/* Turn off power */
+		if (regulator_vwlan1 != NULL) {
+			regulator_disable(regulator_vwlan1);
+			regulator_put(regulator_vwlan1);
+			regulator_vwlan1 = NULL;
+		} else {
+			sholes_camera_lines_safe_mode();
+			pr_err("%s: Regulator for vwlan1 is not "\
 					"initialized\n", __func__);
 			return -EIO;
 		}
@@ -187,22 +203,42 @@ static int mt9p012_sensor_power_set(struct device *dev, enum v4l2_power power)
 			/* nRESET is active LOW. set HIGH to release reset */
 			gpio_set_value(GPIO_MT9P012_RESET, 1);
 
-			/* turn on digital power */
-			if (regulator != NULL) {
+			/* turn on VWLAN1 power */
+			if (regulator_vwlan1 != NULL) {
 				pr_warning("%s: Already have "\
-						"regulator\n", __func__);
+						"regulator_vwlan1 \n", __func__);
 			} else {
-				regulator = regulator_get(NULL, "vcam");
-				if (IS_ERR(regulator)) {
-					pr_err("%s: Cannot get vcam "\
-						"regulator, err=%ld\n",
-						__func__, PTR_ERR(regulator));
-					return PTR_ERR(regulator);
+				regulator_vwlan1 = regulator_get(NULL, "vwlan1");
+				if (IS_ERR(regulator_vwlan1)) {
+					pr_err("%s: Cannot get vwlan1 "\
+						"regulator_vwlan1, err=%ld\n",
+						__func__, PTR_ERR(regulator_vwlan1));
+					return PTR_ERR(regulator_vwlan1);
 				}
 			}
 
-			if (regulator_enable(regulator) != 0) {
-				pr_err("%s: Cannot enable vcam regulator\n",
+			if (regulator_enable(regulator_vwlan1) != 0) {
+				pr_err("%s: Cannot enable vcam regulator_vwlan1\n",
+						__func__);
+				return -EIO;
+			}
+
+			/* turn on VCAM power */
+			if (regulator_vcam != NULL) {
+				pr_warning("%s: Already have "\
+						"regulator_vcam\n", __func__);
+			} else {
+				regulator_vcam = regulator_get(NULL, "vcam");
+				if (IS_ERR(regulator_vcam)) {
+					pr_err("%s: Cannot get vcam "\
+						"regulator_vcam, err=%ld\n",
+						__func__, PTR_ERR(regulator_vcam));
+					return PTR_ERR(regulator_vcam);
+				}
+			}
+
+			if (regulator_enable(regulator_vcam) != 0) {
+				pr_err("%s: Cannot enable vcam regulator_vcam\n",
 						__func__);
 				return -EIO;
 			}
