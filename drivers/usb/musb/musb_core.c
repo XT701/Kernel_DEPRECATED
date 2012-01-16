@@ -1068,45 +1068,29 @@ static struct fifo_cfg __initdata mode_3_cfg[] = {
 static struct fifo_cfg __initdata mode_4_cfg[] = {
 { .hw_ep_num =  1, .style = FIFO_TX,   .maxpacket = 512, },
 { .hw_ep_num =  1, .style = FIFO_RX,   .maxpacket = 512, },
-#ifdef CONFIG_USB_MOT_ANDROID
-{ .hw_ep_num =  2, .style = FIFO_TX,   .maxpacket = 64, },
-#else
 { .hw_ep_num =  2, .style = FIFO_TX,   .maxpacket = 512, },
-#endif
 { .hw_ep_num =  2, .style = FIFO_RX,   .maxpacket = 512, },
 { .hw_ep_num =  3, .style = FIFO_TX,   .maxpacket = 512, },
-#ifdef CONFIG_USB_MOT_ANDROID
-{ .hw_ep_num =  3, .style = FIFO_RX,   .maxpacket = 64, },
-#else
 { .hw_ep_num =  3, .style = FIFO_RX,   .maxpacket = 512, },
-#endif
 { .hw_ep_num =  4, .style = FIFO_TX,   .maxpacket = 512, },
 { .hw_ep_num =  4, .style = FIFO_RX,   .maxpacket = 512, },
-#ifdef CONFIG_USB_MOT_ANDROID
-{ .hw_ep_num =  5, .style = FIFO_TX,   .maxpacket = 64, },
-#else
 { .hw_ep_num =  5, .style = FIFO_TX,   .maxpacket = 512, },
-#endif
 { .hw_ep_num =  5, .style = FIFO_RX,   .maxpacket = 512, },
 { .hw_ep_num =  6, .style = FIFO_TX,   .maxpacket = 512, },
 { .hw_ep_num =  6, .style = FIFO_RX,   .maxpacket = 512, },
-#ifdef CONFIG_USB_ANDROID_RNDIS
-{ .hw_ep_num =  7, .style = FIFO_TX,   .maxpacket = 8, },
-#else
 { .hw_ep_num =  7, .style = FIFO_TX,   .maxpacket = 512, },
-#endif
 { .hw_ep_num =  7, .style = FIFO_RX,   .maxpacket = 512, },
 { .hw_ep_num =  8, .style = FIFO_TX,   .maxpacket = 512, },
 { .hw_ep_num =  8, .style = FIFO_RX,   .maxpacket = 512, },
 { .hw_ep_num =  9, .style = FIFO_TX,   .maxpacket = 512, },
 { .hw_ep_num =  9, .style = FIFO_RX,   .maxpacket = 512, },
-{ .hw_ep_num = 10, .style = FIFO_TX,   .maxpacket = 256, },
-{ .hw_ep_num = 10, .style = FIFO_RX,   .maxpacket = 64, },
-{ .hw_ep_num = 11, .style = FIFO_TX,   .maxpacket = 256, },
-{ .hw_ep_num = 11, .style = FIFO_RX,   .maxpacket = 64, },
-{ .hw_ep_num = 12, .style = FIFO_TX,   .maxpacket = 256, },
-{ .hw_ep_num = 12, .style = FIFO_RX,   .maxpacket = 64, },
-{ .hw_ep_num = 13, .style = FIFO_RXTX, .maxpacket = 4096, },
+{ .hw_ep_num = 10, .style = FIFO_TX,   .maxpacket = 512, },
+{ .hw_ep_num = 10, .style = FIFO_RX,   .maxpacket = 512, },
+{ .hw_ep_num = 11, .style = FIFO_TX,   .maxpacket = 512, },
+{ .hw_ep_num = 11, .style = FIFO_RX,   .maxpacket = 512, },
+{ .hw_ep_num = 12, .style = FIFO_TX,   .maxpacket = 512, },
+{ .hw_ep_num = 12, .style = FIFO_RX,   .maxpacket = 512, },
+{ .hw_ep_num = 13, .style = FIFO_RXTX, .maxpacket = 1024, },
 { .hw_ep_num = 14, .style = FIFO_RXTX, .maxpacket = 1024, },
 { .hw_ep_num = 15, .style = FIFO_RXTX, .maxpacket = 1024, },
 };
@@ -1806,7 +1790,6 @@ allocate_instance(struct device *dev,
 	INIT_LIST_HEAD(&musb->out_bulk);
 
 	hcd->uses_new_polling = 1;
-	hcd->has_tt = 1;
 
 	musb->vbuserr_retry = VBUSERR_RETRY_COUNT;
 	musb->a_wait_bcon = OTG_TIME_A_WAIT_BCON;

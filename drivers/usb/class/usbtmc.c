@@ -1,5 +1,5 @@
 /**
- * drivers/usb/class/usbtmc.c - USB Test & Measurement class driver
+ * drivers/usb/class/usbtmc.c - USB Test & Measurment class driver
  *
  * Copyright (C) 2007 Stefan Kopp, Gechingen, Germany
  * Copyright (C) 2008 Novell, Inc.
@@ -267,7 +267,7 @@ usbtmc_abort_bulk_in_status:
 				dev_err(dev, "usb_bulk_msg returned %d\n", rv);
 				goto exit;
 			}
-		} while ((actual == max_size) &&
+		} while ((actual = max_size) &&
 			 (n < USBTMC_MAX_READS_TO_CLEAR_BULK_IN));
 
 	if (actual == max_size) {

@@ -140,7 +140,7 @@ static const u8 usb3_rh_dev_descriptor[18] = {
 	0x09,       /*  __u8  bMaxPacketSize0; 2^9 = 512 Bytes */
 
 	0x6b, 0x1d, /*  __le16 idVendor; Linux Foundation */
-	0x03, 0x00, /*  __le16 idProduct; device 0x0003 */
+	0x02, 0x00, /*  __le16 idProduct; device 0x0002 */
 	KERNEL_VER, KERNEL_REL, /*  __le16 bcdDevice */
 
 	0x03,       /*  __u8  iManufacturer; */
@@ -1903,20 +1903,10 @@ irqreturn_t usb_hcd_irq (int irq, void *__hcd)
 		     !test_bit(HCD_FLAG_HW_ACCESSIBLE, &hcd->flags))) {
 		rc = IRQ_NONE;
 #ifdef CONFIG_MACH_MAPPHONE
-	switch (hcd->driver->flags & HCD_MASK) {
-	case HCD_USB11:
-		clear_ohci_intr(hcd);
-		rc = IRQ_HANDLED;
-		break;
-	case HCD_USB2:
-		clear_ehci_intr(hcd);
-		rc = IRQ_HANDLED;
-		break;
-	case HCD_USB3:
-		break;
-	default:
-		break;
-	}
+		if (!is_cdma_phone()) {
+			clear_ehci_intr(hcd);
+			rc = IRQ_HANDLED;
+		}
 #endif
 	} else if (hcd->driver->irq(hcd) == IRQ_NONE) {
 		rc = IRQ_NONE;

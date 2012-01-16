@@ -324,8 +324,7 @@ static void modem_read_bulk_callback(struct urb *urb)
 			dev_info(&modem_port_ptr->port->dev,
 				 "%s: Read %d bytes\n", __func__, buf->size);
 	} else {
-		/* ENOENT error is normal when stopping data traffic. */
-		if (status != -ENOENT)
+		if (cdma_modem_debug)
 			dev_info(&modem_port_ptr->port->dev,
 				 "%s: bulk rx err %d\n", __func__, status);
 		/* we drop the buffer due to an error */
@@ -334,8 +333,6 @@ static void modem_read_bulk_callback(struct urb *urb)
 		so the queue cannot dry up */
 	}
 
-	/* If ETIME error occurs, we do not submit the urb any more.
-	   Just suspend and resume the bus to see if it recovers just. */
 	if (likely(modem_port_ptr->susp_count == 0) &&
 	   (modem_port_ptr->port_closing != 1) &&
 	   (status != -ETIME)
@@ -1372,23 +1369,6 @@ alloc_write_buf_fail:
 	return -ENOMEM;
 }
 
-static int modem_probe(struct usb_interface *interface,
-				const struct usb_device_id *id)
-{
-	struct usb_device *dev = interface_to_usbdev(interface);
-	int ret;
-
-	ret = usb_serial_probe(interface, id);
-
-	/* Enable autosuspend for all interfaces.
-	* This will remove the need for user-space script
-	* to write to the node
-	*/
-	dev->autosuspend_disabled = 0;
-
-	return ret;
-}
-
 static void modem_disconnect(struct usb_serial *serial)
 {
 	struct modem_port *modem_port_ptr =
@@ -1430,7 +1410,7 @@ static void modem_release(struct usb_serial *serial)
 
 static struct usb_driver modem_driver = {
 	.name = "cdma-modem",
-	.probe = modem_probe,
+	.probe = usb_serial_probe,
 	.disconnect = usb_serial_disconnect,
 	.id_table = id_table,
 	.no_dynamic_id = 1,

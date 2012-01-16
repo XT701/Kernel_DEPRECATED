@@ -32,9 +32,7 @@ loglevel 3
     mkdir /system
     mkdir /data 0771 system system
     mkdir /cache 0771 system cache
-#    mkdir /config 0500 root root
-
-    # Directory for putting things only root should see.
+    mkdir /config 0500 root root
     mkdir /mnt/secure 0700 root root
     mkdir /mnt/secure/staging 0700 root root
     mkdir /mnt/secure/asec  0700 root root
@@ -75,9 +73,6 @@ loglevel 3
     mount yaffs2 mtd@userdata /data nosuid nodev
     chown system system /data
     chmod 0771 /data
-
-    #mount squashfs loop@/system/lib/modules/modules.sqf /system/lib/modules ro
-    #mount squashfs loop@/system/xbin/xbin.sqf /system/xbin ro
 
     mkdir /data/dontpanic
     chown root log /data/dontpanic

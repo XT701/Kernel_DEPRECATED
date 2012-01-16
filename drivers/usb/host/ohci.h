@@ -403,7 +403,6 @@ struct ohci_hcd {
 #define	OHCI_QUIRK_HUB_POWER	0x100			/* distrust firmware power/oc setup */
 #define	OHCI_QUIRK_AMD_ISO	0x200			/* ISO transfers*/
 #define	OHCI_QUIRK_AMD_PREFETCH	0x400			/* pre-fetch for ISO transfer */
-#define	OHCI_QUIRK_SHUTDOWN	0x800			/* nVidia power bug */
 	// there are also chip quirks/bugs in init logic
 
 	struct work_struct	nec_work;	/* Worker for NEC quirk */
@@ -559,20 +558,7 @@ static inline unsigned int _ohci_readl (const struct ohci_hcd *ohci,
 		readl_be (regs) :
 		readl (regs);
 #else
-	if (omap_usbhost_wa && (unsigned int)regs == ohci_omap_hccontrol_reg) {
-		unsigned long flags;
-		unsigned int v;
-
-		spin_lock_irqsave(&ohci_q_lock, flags);
-		v = readl(regs);
-		if(ohci_q_halted) {
-			v = (v & (~0x34)) | (ohci_omap_hccontrol_backup & 0x34);
-		}
-		spin_unlock_irqrestore (&ohci_q_lock, flags);
-		return v;
-	} else
-		return readl(regs);
-
+	return readl (regs);
 #endif
 }
 
@@ -584,18 +570,7 @@ static inline void _ohci_writel (const struct ohci_hcd *ohci,
 		writel_be (val, regs) :
 		writel (val, regs);
 #else
-	if (omap_usbhost_wa && (unsigned int)regs == ohci_omap_hccontrol_reg) {
-		unsigned long flags;
-		unsigned int v = val;
-		spin_lock_irqsave(&ohci_q_lock, flags);
-		if(ohci_q_halted) {
-			ohci_omap_hccontrol_backup = v;
-			v = v & (~0x34);
-		}
-		writel(v, regs);
-		spin_unlock_irqrestore (&ohci_q_lock, flags);
-	} else
-		writel(val, regs);
+		writel (val, regs);
 #endif
 }
 

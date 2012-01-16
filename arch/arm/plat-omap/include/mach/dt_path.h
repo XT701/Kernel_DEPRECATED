@@ -32,6 +32,7 @@
 #define DT_PROP_CHOSEN_USB_PROD_NAME "usb_id_prod_name"
 #define DT_PROP_CHOSEN_USB_PIDS "usb_pids"
 #define DT_PROP_CHOSEN_USB_NLUNS "usb_nluns"
+#define DT_PROP_CHOSEN_USB_CDROM_LUN_NUM "usb_cdrom_lun_num"
 #define DT_PROP_CHOSEN_MODEM_IFACE_NUM "modem_interface_num"
 
 /* Keypad Node */

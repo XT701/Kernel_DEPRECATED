@@ -377,6 +377,7 @@ struct fsg_dev {
 	u32			usb_amount_left;
 
 	unsigned int		nluns;
+	unsigned int		cdrom_lun_num;
 	struct lun		*luns;
 	struct lun		*curlun;
 
@@ -719,7 +720,10 @@ static int fsg_function_setup(struct usb_function *f,
 				break;
 			}
 			VDBG(fsg, "get max LUN\n");
-			*(u8 *)cdev->req->buf = fsg->nluns - 1;
+			if (!cdrom_enable && (fsg->nluns > 1))
+				*(u8 *)cdev->req->buf = fsg->nluns - 2;
+			else
+				*(u8 *)cdev->req->buf = fsg->nluns - 1;
 			value = 1;
 			break;
 		}
@@ -2921,7 +2925,7 @@ static int __init fsg_alloc(void)
 	kref_init(&fsg->ref);
 	init_completion(&fsg->thread_notifier);
 	INIT_DELAYED_WORK((struct delayed_work *)&(fsg->eject_delay_work),\
-	 fsg_on_cdrom_eject);
+	fsg_on_cdrom_eject);
 
 	the_fsg = fsg;
 	return 0;
@@ -3027,8 +3031,9 @@ fsg_function_bind(struct usb_configuration *c, struct usb_function *f)
 		curlun->ro = 0;
 		curlun->cdrom = 0;
 #ifdef CONFIG_USB_MOT_ANDROID
-		/* LUN1 when available is always CD-ROM */
-		if (i == 1) {
+		/* LUN for CD-ROM will be assigned
+		by the variable cdrom_lun_num */
+		if (i == fsg->cdrom_lun_num) {
 			curlun->ro = 1;
 			curlun->cdrom = 1;
 		}
@@ -3214,6 +3219,7 @@ static int __init fsg_probe(struct platform_device *pdev)
 		if (pdata->release)
 			fsg->release = pdata->release;
 		fsg->nluns = pdata->nluns;
+		fsg->cdrom_lun_num = pdata->cdrom_lun_num;
 	}
 
 	return 0;

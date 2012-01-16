@@ -504,7 +504,7 @@ static void acm_disable(struct usb_function *f)
  * @length: size of data
  * Context: irqs blocked, acm->lock held, acm_notify_req non-null
  *
- * Returns zero on success or a negative errno.
+ * Returns zero on sucess or a negative errno.
  *
  * See section 6.3.5 of the CDC 1.1 specification for information
  * about the only notification we issue:  SerialState change.
@@ -616,6 +616,26 @@ static int acm_tiocmset(struct gserial *port, int set, int clear)
 	 *  TODO:  configure DSR/DCD/OUT1, etc according to set/clear
 	 */
 	return acm_notify_serial_state(acm);
+}
+
+static int acm_tiocmget(struct gserial *port)
+{
+	struct f_acm            *acm = port_to_acm(port);
+	unsigned int result = 0;
+
+	if (acm->port_handshake_bits & ACM_CTRL_DTR)
+		result |= TIOCM_DTR;
+
+	if (acm->port_handshake_bits & ACM_CTRL_RTS)
+		result |= TIOCM_RTS;
+
+	if (acm->serial_state & TIOCM_CD)
+		result |= TIOCM_CD;
+
+	if (acm->serial_state & TIOCM_RI)
+		result |= TIOCM_RI;
+
+	return result;
 }
 #endif
 
@@ -874,6 +894,7 @@ int __init acm_bind_config(struct usb_configuration *c, u8 port_num)
 
 #ifdef CONFIG_USB_MOT_ANDROID
 	acm->port.tiocmset = acm_tiocmset;
+	acm->port.tiocmget = acm_tiocmget;
 	g_acm_dev = acm;
 #endif
 

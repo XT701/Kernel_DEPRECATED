@@ -39,8 +39,6 @@
 #include <linux/usb/gadget.h>
 #include <linux/io.h>
 
-#include <asm-generic/gpio.h>
-
 #include "f_mot_android.h"
 #include "u_serial.h"
 #include "f_adb.h"
@@ -64,8 +62,6 @@ MODULE_DESCRIPTION("Motorola Android Composite USB Driver");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("1.0");
 
-static char usb_bypass_flag;
-
 static const char longname[] = "Gadget Android";
 
 /* Default vendor and product IDs, overridden by platform data */
@@ -73,7 +69,7 @@ static const char longname[] = "Gadget Android";
 #define PRODUCT_ID              0x41da
 #define ADB_PRODUCT_ID          0x41da
 
-#define MAX_DEVICE_TYPE_NUM   20
+#define MAX_DEVICE_TYPE_NUM   25
 #define MAX_DEVICE_NAME_SIZE  20
 
 
@@ -90,6 +86,9 @@ struct device_pid_vid {
 
 static struct device_pid_vid mot_android_vid_pid[MAX_DEVICE_TYPE_NUM] = {
 	{"msc", MSC_TYPE_FLAG | CDROM_TYPE_FLAG, 0x22b8, 0x41d9,
+	 "Motorola Config 14", USB_CLASS_PER_INTERFACE, USB_CLASS_PER_INTERFACE,
+	 USB_CLASS_PER_INTERFACE},
+	{"msc_only", MSC_TYPE_FLAG, 0x22b8, 0x41d9,
 	 "Motorola Config 14", USB_CLASS_PER_INTERFACE, USB_CLASS_PER_INTERFACE,
 	 USB_CLASS_PER_INTERFACE},
 	{"cdrom", CDROM_TYPE_FLAG, 0x22b8, 0x41de, "Motorola CDROM Device",
@@ -128,10 +127,10 @@ static struct device_pid_vid mot_android_vid_pid[MAX_DEVICE_TYPE_NUM] = {
 	{"msc_adb_eth", MSC_TYPE_FLAG | ADB_TYPE_FLAG | ETH_TYPE_FLAG,
 	 0x22b8,
 	 0x41d4, "Motorola Android Composite Device"},
-	 {"charge_only", MSC_TYPE_FLAG, 0x22b8, 0x41d9, "Motorola Config 49",
+	 {"charge_only", MSC_TYPE_FLAG, 0x22b8, 0x4287, "Motorola Config 49",
 	 USB_CLASS_PER_INTERFACE, USB_CLASS_PER_INTERFACE,
 	 USB_CLASS_PER_INTERFACE},
-	{"charge_adb", MSC_TYPE_FLAG | ADB_TYPE_FLAG, 0x22b8, 0x41db,
+	{"charge_adb", MSC_TYPE_FLAG | ADB_TYPE_FLAG, 0x22b8, 0x428c,
 	 "Motorola Config 50", USB_CLASS_PER_INTERFACE,
 	 USB_CLASS_PER_INTERFACE, USB_CLASS_PER_INTERFACE},
 	{"rndis", RNDIS_TYPE_FLAG, 0x22b8, 0x41E4, "Motorola RNDIS Device",
@@ -141,7 +140,12 @@ static struct device_pid_vid mot_android_vid_pid[MAX_DEVICE_TYPE_NUM] = {
 	 "Motorola RNDIS ADB Device",
 	 USB_CLASS_PER_INTERFACE, USB_CLASS_PER_INTERFACE,
 	 USB_CLASS_PER_INTERFACE},
-	{}
+	{"ets", ETS_TYPE_FLAG, 0x15eb, 0x0101, "CONF1",
+	 USB_CLASS_PER_INTERFACE, USB_CLASS_PER_INTERFACE,
+	 USB_CLASS_PER_INTERFACE},
+	{"ets_adb", ETS_TYPE_FLAG | ADB_TYPE_FLAG, 0x22b8, 0x8787, "CONF2",
+	 USB_CLASS_MISC, 0x02, 0x01},
+	{},
 };
 
 
@@ -169,6 +173,7 @@ struct android_dev {
 
 	int product_id;
 	int version;
+	struct switch_dev sdev;
 };
 
 static struct android_dev *_android_dev;
@@ -222,8 +227,12 @@ void android_usb_set_connected(int connected)
 {
 	if (_android_dev && _android_dev->cdev
 	    && _android_dev->cdev->gadget) {
-		if (connected)
+		if (connected) {
 			usb_gadget_disconnect(_android_dev->cdev->gadget);
+			switch_set_state(&(_android_dev->sdev), 1);
+		} else {
+			switch_set_state(&(_android_dev->sdev), 0);
+		}
 	}
 }
 
@@ -377,7 +386,8 @@ static int android_setup_config(struct usb_configuration *c,
 		return ret;
 
 	for (i = 0; i < android_config_driver.next_interface_id; i++) {
-		if (android_config_driver.interface[i]->setup) {
+		if (android_config_driver.interface[i]->setup &&
+			!(android_config_driver.interface[i]->hidden)) {
 			ret =
 			    android_config_driver.
 			    interface[i]->setup(android_config_driver.
@@ -422,13 +432,8 @@ void adb_mode_change_cb(void)
 
 	ret = wait_event_interruptible(dev_mode_change->adb_cb_wq,
 		(!dev_mode_change->adb_mode_changed_flag));
-	if (ret < 0) {
+	if (ret < 0)
 		printk(KERN_ERR "adb_change_cb: %d\n", ret);
-		return;
-	}
-
-	wait_event_interruptible(dev_mode_change->adb_cb_wq,
-		(!dev_mode_change->adb_mode_changed_flag));
 
 	dev_mode_change->adb_mode_changed_flag = 1;
 	wake_up_interruptible(&dev_mode_change->device_mode_change_wq);
@@ -694,6 +699,7 @@ static int enable_android_usb_product_function(char *device_name, int cnt)
 		return 0;
 	}
 	if (!strncmp(device_name, "msc", cnt - 1)
+	    || !strncmp(device_name, "msc_only", cnt - 1)
 	    || !strncmp(device_name, "cdrom", cnt - 1)
 	    || !strncmp(device_name, "charge_only", cnt - 1)) {
 		list_for_each_entry(f, &android_config_driver.functions,
@@ -739,6 +745,28 @@ static int enable_android_usb_product_function(char *device_name, int cnt)
 		return 0;
 	}
 
+	if (!strncmp(device_name, "ets", cnt - 1)) {
+		list_for_each_entry(f, &android_config_driver.functions,
+				    list) {
+			if (!strcmp(f->name, "ets"))
+				f->hidden = disable;
+			else
+				f->hidden = enable;
+		}
+		return 0;
+	}
+
+	if (!strncmp(device_name, "ets_adb", cnt - 1)) {
+			list_for_each_entry(f, &android_config_driver.functions,
+				    list) {
+			if (!strcmp(f->name, "ets")
+			    || !strcmp(f->name, "adb"))
+				f->hidden = disable;
+			else
+				f->hidden = enable;
+			}
+		return 0;
+	}
 
 	printk(KERN_ERR "unknown mode: %s\n", device_name);
 	return -1;
@@ -777,13 +805,6 @@ static void force_reenumeration(struct android_dev *dev, int dev_type)
 	}
 
 	if (dev->cdev && dev->cdev->gadget) {
-		/* According to our test, the interval between D+ pullup
-		 * and next pulldown operation shall be bigger than 50ms,
-		 * otherwise there will be enumeration issue.  It shall be
-		 * relevant with USB transceiver on device/host side.
-		 *  Sleep 50ms here to make it smoothly
-		 */
-
 		/* dev->cdev->gadget->speed != USB_SPEED_UNKNOWN ? */
 
 		/* According to our test, the interval between D+ pullup
@@ -792,10 +813,7 @@ static void force_reenumeration(struct android_dev *dev, int dev_type)
 		 * relevant with USB transceiver on device/host side.
 		 *  Sleep 50ms here to make it smoothly
 		 */
-		usb_gadget_disconnect(dev->cdev->gadget);
-		msleep(100);
-		usb_gadget_connect(dev->cdev->gadget);
-		msleep(100);
+		usb_composite_force_reset(dev->cdev);
 	}
 }
 
@@ -858,6 +876,7 @@ static int device_mode_change_release(struct inode *ip, struct file *fp)
 	    _device_mode_change_dev;
 
 	atomic_dec(&dev_mode_change->device_mode_change_excl);
+	dev_mode_change->adb_mode_changed_flag = 0;
 	return 0;
 }
 
@@ -886,6 +905,8 @@ device_mode_change_write(struct file *file, const char __user * buffer,
 	}
 	cmd[cnt] = 0;
 
+	printk(KERN_INFO "%s Mode change command=%s\n", __func__, cmd);
+
 	/* USB cable detached Command */
 	if (strncmp(cmd, "usb_cable_detach", 16) == 0) {
 		dev_mode_change->usb_data_transfer_flag = 0;
@@ -893,6 +914,12 @@ device_mode_change_write(struct file *file, const char __user * buffer,
 		dev_mode_change->usb_device_cfg_flag = 0;
 		dev_mode_change->usb_get_desc_flag = 0;
 		usb_gadget_disconnect(_android_dev->cdev->gadget);
+		/*
+		 * Set the composite switch to 0 during a disconnect.
+		 * This is required to handle a few corner cases, where
+		 * enumeration has not completed, but the cable is yanked out
+		 */
+		switch_set_state(&_android_dev->cdev->sdev, 0);
 		printk(KERN_INFO "%s - Handled Detach\n", __func__);
 		return count;
 	}
@@ -908,21 +935,6 @@ device_mode_change_write(struct file *file, const char __user * buffer,
 		printk(KERN_INFO "%s - Handled disconnect\n", __func__);
 		return count;
 	}
-
-	if (strncmp(cmd, "usb_bypass", 10) == 0) {
-		usb_gadget_disconnect(_android_dev->cdev->gadget);
-		/* switch to bp usb interface */
-		usb_bypass_flag = 1;
-		printk(KERN_INFO "<Morris> usb bypass mode requested \n");
-		ret = gpio_request(36, "ipc_usb_bypass");
-		printk(KERN_INFO "<Morris> gpio 36 request \
-					returned %d \n", ret);
-		ret = gpio_direction_output(36, 1);
-		printk(KERN_INFO "<Morris> gpio 36 dir out \
-					returned %d \n", ret);
-		return count;
-	}
-
 
 	for (i = 0; i < MAX_DEVICE_TYPE_NUM; i++) {
 		if (mot_android_vid_pid[i].name == NULL) {
@@ -958,16 +970,6 @@ device_mode_change_write(struct file *file, const char __user * buffer,
 		printk(KERN_ERR "%s - Error Enabling Function \n" ,
 			__func__);
 		return -EFAULT;
-	}
-
-	if (usb_bypass_flag) {
-		usb_bypass_flag = 0;
-		ret = gpio_request(36, "ipc_usb_bypass");
-		printk(KERN_INFO "<Morris> gpio 36 request \
-				returned %d \n", ret);
-		ret = gpio_direction_output(36, 0);
-		printk(KERN_INFO "<Morris> gpio 36 dir out \
-				returned %d \n", ret);
 	}
 
 	dev_mode_change->g_device_type = temp_device_type;
@@ -1211,14 +1213,21 @@ static int __init init(void)
 	_registered_function_count = 0;
 	atomic_set(&tethering_enable_excl, 0);
 
+	dev->sdev.name = "usb_connected";
+	ret = switch_dev_register(&dev->sdev);
+	if (ret < 0)
+		return ret;
+
 	ret = platform_driver_register(&android_platform_driver);
 	if (ret) {
+		switch_dev_unregister(&dev->sdev);
 		kfree(_android_dev);
 		kfree(_device_mode_change_dev);
 		return ret;
 	}
 	ret = misc_register(&mode_change_device);
 	if (ret) {
+		switch_dev_unregister(&dev->sdev);
 		kfree(_android_dev);
 		kfree(_device_mode_change_dev);
 		platform_driver_unregister(&android_platform_driver);
@@ -1235,6 +1244,7 @@ static void __exit cleanup(void)
 	platform_driver_unregister(&android_platform_driver);
 	kfree(_device_mode_change_dev);
 	_device_mode_change_dev = NULL;
+	switch_dev_unregister(&(_android_dev->sdev));
 	kfree(_android_dev);
 	_android_dev = NULL;
 }

@@ -43,6 +43,9 @@ g_file_storage-objs		:= file_storage.o
 g_printer-objs			:= printer.o
 g_cdc-objs			:= cdc2.o
 g_mot_android-objs              := mot_android.o f_usbnet.o f_adb.o f_mass_storage.o f_mtp.o f_acm.o u_serial.o f_rndis.o u_ether.o
+ifeq ($(CONFIG_USB_SERIAL_VIATELECOM_CBP),y)
+g_mot_android-objs		+= f_via_cpbypass.o
+endif
 
 obj-$(CONFIG_USB_ZERO)		+= g_zero.o
 obj-$(CONFIG_USB_AUDIO)		+= g_audio.o

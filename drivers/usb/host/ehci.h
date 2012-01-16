@@ -91,9 +91,8 @@ struct ehci_hcd {			/* one per controller */
 	int			next_uframe;	/* scan periodic, start here */
 	unsigned		periodic_sched;	/* periodic activity count */
 
-	/* list of itds & sitds completed while clock_frame was still active */
+	/* list of itds completed while clock_frame was still active */
 	struct list_head	cached_itd_list;
-	struct list_head	cached_sitd_list;
 	unsigned		clock_frame;
 
 	/* per root hub port */
@@ -134,8 +133,6 @@ struct ehci_hcd {			/* one per controller */
 	unsigned		has_amcc_usb23:1;
 	unsigned		need_io_watchdog:1;
 	unsigned		broken_periodic:1;
-	unsigned		amd_l1_fix:1;
- 	unsigned		controller_resets_phy:1;
 
 	/* required for usb32 quirk */
 	#define OHCI_CTRL_HCFS          (3 << 6)
@@ -169,8 +166,6 @@ struct ehci_hcd {			/* one per controller */
 	struct wake_lock        wake_lock_ehci_rwu;
 	/* wakelock for suspend/resume */
 	struct wake_lock        wake_lock_ehci_pm;
-	struct wake_lock        wake_lock_usbclocks;
-	/* wakelock for usb clocks */
 #endif
 };
 
@@ -210,7 +205,7 @@ timer_action_done (struct ehci_hcd *ehci, enum ehci_timer_action action)
 	clear_bit (action, &ehci->actions);
 }
 
-static void free_cached_lists(struct ehci_hcd *ehci);
+static void free_cached_itd_list(struct ehci_hcd *ehci);
 
 /*-------------------------------------------------------------------------*/
 
@@ -379,7 +374,6 @@ struct ehci_qh {
 #define NO_FRAME ((unsigned short)~0)			/* pick new start */
 
 	struct usb_device	*dev;		/* access to TT */
-	unsigned		is_out:1;	/* bulk or intr OUT */
 	unsigned		clearing_tt:1;	/* Clear-TT-Buf in progress */
 };
 
@@ -410,8 +404,9 @@ struct ehci_iso_sched {
  * acts like a qh would, if EHCI had them for ISO.
  */
 struct ehci_iso_stream {
-	/* first field matches ehci_hq, but is NULL */
-	struct ehci_qh_hw	*hw;
+	/* first two fields match QH, but info1 == 0 */
+	__hc32			hw_next;
+	__hc32			hw_info1;
 
 	u32			refcount;
 	u8			bEndpointAddress;
@@ -631,20 +626,7 @@ static inline unsigned int ehci_readl(const struct ehci_hcd *ehci,
 		readl_be(regs) :
 		readl(regs);
 #else
-	if (omap_usbhost_wa && (unsigned int)regs == echi_omap_usbcmd_reg) {
-		unsigned long flags;
-		unsigned int v;
-
-		spin_lock_irqsave(&ehci_q_lock, flags);
-		v = readl(regs);
-		if(ehci_q_halted) {
-			v = (v & (~0x30)) | (echi_omap_usbcmd_backup & 0x30);
-		}
-		spin_unlock_irqrestore (&ehci_q_lock, flags);
-		return v;
-	} else
-		return readl(regs);
-
+	return readl(regs);
 #endif
 }
 
@@ -656,18 +638,7 @@ static inline void ehci_writel(const struct ehci_hcd *ehci,
 		writel_be(val, regs) :
 		writel(val, regs);
 #else
-	if (omap_usbhost_wa && (unsigned int)regs == echi_omap_usbcmd_reg) {
-		unsigned long flags;
-		unsigned int v = val;
-		spin_lock_irqsave(&ehci_q_lock, flags);
-		if(ehci_q_halted) {
-			echi_omap_usbcmd_backup = v;
-			v = v & (~0x30);
-		}
-		writel(v, regs);
-		spin_unlock_irqrestore (&ehci_q_lock, flags);
-	} else
-		writel(val, regs);
+	writel(val, regs);
 #endif
 }
 

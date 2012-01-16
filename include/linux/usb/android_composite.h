@@ -84,6 +84,8 @@ struct usb_mass_storage_platform_data {
 
 	/* number of LUNS */
 	int nluns;
+	/* LUN number for CD-ROM */
+	int cdrom_lun_num;
 };
 
 /* Platform data for USB ethernet driver. */
