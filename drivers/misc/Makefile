@@ -47,7 +47,6 @@ obj-$(CONFIG_MODEM_PM_DRIVER)   += modem_pm_driver/
 obj-$(CONFIG_SMC_DRIVER)        += smc/
 obj-$(CONFIG_SEC_DRIVER)        += sec/
 obj-$(CONFIG_NETMUX_DRIVER)     += netmux/
-obj-$(CONFIG_NETMUX_LINKDRIVER) += netmux_linkdriver/
 obj-$(CONFIG_SYSPANIC)		+= syspanic.o
 obj-$(CONFIG_NETMETER)		+= netmeter.o
 obj-$(CONFIG_TCMD_DRIVER)	+= tcmd_driver.o
