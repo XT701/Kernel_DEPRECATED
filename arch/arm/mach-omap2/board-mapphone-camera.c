@@ -202,7 +202,6 @@ static int ov8810_sensor_power_set(struct device *dev, enum v4l2_power power)
 		msleep(1);
 
 		isp_set_xclk(0, OMAP34XXCAM_XCLK_A);
-
 #if defined(CONFIG_LEDS_FLASH_RESET)
 		bd7885_device_disable();
 #endif
@@ -358,55 +357,81 @@ int mapphone_camera_reg_power(bool enable)
 
     error = 0;
 
+	static struct regulator *regulator_vcam;
+	static struct regulator *regulator_vwlan1;
+
 	if (reg_resource_acquired == false && enable) {
-		/* get list of regulators and enable*/
-		for (i = 0; i < CAM_MAX_REGS && \
-			regulator_list[i][0] != 0; i++) {
-			printk(KERN_INFO "%s - enable %s\n",\
-				__func__,\
-				regulator_list[i]);
-			regulator[i] = regulator_get(NULL, regulator_list[i]);
-			if (IS_ERR(regulator[i])) {
-				pr_err("%s: Cannot get %s "\
-					"regulator, err=%ld\n",\
-					__func__, regulator_list[i],
-					PTR_ERR(regulator[i]));
-				error = PTR_ERR(regulator[i]);
-				regulator[i] = NULL;
-				break;
-			}
-			if (regulator_enable(regulator[i]) != 0) {
-				pr_err("%s: Cannot enable regulator: %s \n",
-					__func__, regulator_list[i]);
-				error = -EIO;
-				regulator_put(regulator[i]);
-				regulator[i] = NULL;
-				break;
+
+		/* turn on VWLAN1 power */
+		if (regulator_vwlan1 != NULL) {
+			pr_warning("%s: Already have "\
+					"regulator_vwlan1 \n", __func__);
+		} else {
+			regulator_vwlan1 = regulator_get(NULL, "vwlan1");
+			if (IS_ERR(regulator_vwlan1)) {
+				pr_err("%s: Cannot get vwlan1 "\
+					"regulator_vwlan1, err=%ld\n",
+					__func__, PTR_ERR(regulator_vwlan1));
+				return PTR_ERR(regulator_vwlan1);
 			}
 		}
 
-		if (error != 0 && i > 0) {
-			/* return all acquired regulator resources if error */
-			while (--i && regulator[i]) {
-				regulator_disable(regulator[i]);
-				regulator_put(regulator[i]);
-				regulator[i] = NULL;
+		if (regulator_enable(regulator_vwlan1) != 0) {
+			pr_err("%s: Cannot enable vcam regulator_vwlan1\n",
+					__func__);
+			return -EIO;
+		}
+
+		/* turn on VCAM power */
+		if (regulator_vcam != NULL) {
+			pr_warning("%s: Already have "\
+					"regulator_vcam\n", __func__);
+		} else {
+			regulator_vcam = regulator_get(NULL, "vcam");
+			if (IS_ERR(regulator_vcam)) {
+				pr_err("%s: Cannot get vcam "\
+					"regulator_vcam, err=%ld\n",
+					__func__, PTR_ERR(regulator_vcam));
+				return PTR_ERR(regulator_vcam);
 			}
-		} else
-			reg_resource_acquired = true;
+		}
+
+		if (regulator_enable(regulator_vcam) != 0) {
+			pr_err("%s: Cannot enable vcam regulator_vcam\n",
+					__func__);
+			return -EIO;
+		}
+
+		mdelay(5);
+
+		reg_resource_acquired = true;
 
 	} else if (reg_resource_acquired && !enable) {
-		/* get list of regulators and disable*/
-		for (i = 0; i < CAM_MAX_REGS && \
-			regulator_list[i][0] != 0; i++) {
-			printk(KERN_INFO "%s - disable %s\n",\
-					 __func__,\
-					 regulator_list[i]);
-			if (regulator[i]) {
-				regulator_disable(regulator[i]);
-				regulator_put(regulator[i]);
-				regulator[i] = NULL;
-			}
+		/* Turn off vcam regulators power */
+		if (regulator_vcam != NULL) {
+			regulator_disable(regulator_vcam);
+			regulator_put(regulator_vcam);
+			regulator_vcam = NULL;
+		} else {
+			mapphone_camera_lines_safe_mode();
+			pr_err("%s: Regulator for vcam is not "\
+					"initialized\n", __func__);
+			return -EIO;
+		}
+
+		/* Delay 6 msec for vcam to drop (4.7uF to 10uF change) */
+		msleep(6);
+
+		/* Turn off vwlan1 regulators power */
+		if (regulator_vwlan1 != NULL) {
+			regulator_disable(regulator_vwlan1);
+			regulator_put(regulator_vwlan1);
+			regulator_vwlan1 = NULL;
+		} else {
+			mapphone_camera_lines_safe_mode();
+			pr_err("%s: Regulator for vwlan1 is not "\
+					"initialized\n", __func__);
+			return -EIO;
 		}
 
 		reg_resource_acquired = false;
@@ -416,15 +441,7 @@ int mapphone_camera_reg_power(bool enable)
     }
 
     return error;
-
 }
-
-/* We can't change the IOMUX config after bootup
- * with the current pad configuration architecture,
- * the next two functions are hack to configure the
- * camera pads at runtime to save power in standby.
- * For phones don't have MIPI camera support, like
- * Ruth, Tablet P2,P3 */
 
 void mapphone_camera_lines_safe_mode(void)
 {
@@ -450,13 +467,9 @@ void mapphone_camera_lines_func_mode(void)
 	omap_ctrl_writew(CAM_IOMUX_FUNC_MODE, 0x0128);
 }
 
-/* the next two functions are for Phones have MIPI
- * camera support, like Tablet P2A */
-
 void mapphone_camera_mipi_lines_safe_mode(void)
 {
-	omap_writew(0x0704, 0x4800207C);	/* CONTROL_PADCONF_GPMC_A2 */
-	/* CONTROL_PADCONF_GPMC_WAIT2 */
+	omap_writew(0x0704, 0x4800207C);
 	omap_writew(CAM_IOMUX_SAFE_MODE, 0x480020D0);
 	omap_ctrl_writew(CAM_IOMUX_SAFE_MODE, 0x0122);
 	omap_ctrl_writew(CAM_IOMUX_SAFE_MODE, 0x0124);
@@ -466,79 +479,16 @@ void mapphone_camera_mipi_lines_safe_mode(void)
 
 void mapphone_camera_mipi_lines_func_mode(void)
 {
-	omap_writew(0x0704, 0x4800207C);	/* CONTROL_PADCONF_GPMC_A2 */
-	omap_writew(0x061C, 0x480020D0);	/* CONTROL_PADCONF_GPMC_WAIT2 */
+	omap_writew(0x0704, 0x4800207C);
+	omap_writew(0x061C, 0x480020D0);
 	omap_ctrl_writew(CAM_IOMUX_FUNC_MODE, 0x0122);
 	omap_ctrl_writew(CAM_IOMUX_FUNC_MODE, 0x0124);
 	omap_ctrl_writew(CAM_IOMUX_FUNC_MODE, 0x0126);
 	omap_ctrl_writew(CAM_IOMUX_FUNC_MODE, 0x0128);
 }
 
-void mapphone_init_reg_list()
-{
-#ifdef CONFIG_ARM_OF
-	struct device_node *feat_node;
-	const void *feat_prop;
-	char *prop_name;
-	char reg_name[CAM_MAX_REG_NAME_LEN];
-	int reg_entry;
-	int feature_name_len, i, j;
-
-	j = 0;
-	reg_entry = 0;
-
-	/* clear the regulator list */
-	memset(regulator_list, 0x0, sizeof(regulator_list));
-
-	/* get regulator info for this device */
-	feat_node = of_find_node_by_path(DT_HIGH_LEVEL_FEATURE);
-	if (NULL == feat_node)
-		return;
-
-	feat_prop = of_get_property(feat_node,
-				"feature_cam_regulators", NULL);
-	if (NULL != feat_prop) {
-		prop_name = (char *)feat_prop;
-		printk(KERN_INFO \
-			"Regulators for device: %s\n", prop_name);
-		feature_name_len = strlen(prop_name);
-
-		memset(reg_name, 0x0, CAM_MAX_REG_NAME_LEN);
-
-		for (i = 0; i < feature_name_len; i++) {
-
-			if (prop_name[i] != '\0' && prop_name[i] != ',')
-				reg_name[j++] = prop_name[i];
-
-			if (prop_name[i] == ',' ||\
-				 (i == feature_name_len-1)) {
-				printk(KERN_INFO \
-					"Adding %s to camera \
-						regulator list\n",\
-					reg_name);
-				if (reg_entry < CAM_MAX_REGS) {
-					strncpy(\
-						regulator_list[reg_entry++],\
-						reg_name,\
-						CAM_MAX_REG_NAME_LEN);
-					memset(reg_name, 0x0, \
-						CAM_MAX_REG_NAME_LEN);
-					j = 0;
-				} else {
-					break;
-				}
-			}
-
-		}
-	}
-#endif
-    return;
-}
-
 void __init mapphone_camera_init(void)
 {
-	mapphone_init_reg_list();
-
 	printk(KERN_INFO "mapphone_camera_init: MIPI camera\n");
 	omap_cfg_reg(AD17_34XX_CSI2_DX0);
 	omap_cfg_reg(AE18_34XX_CSI2_DY0);
