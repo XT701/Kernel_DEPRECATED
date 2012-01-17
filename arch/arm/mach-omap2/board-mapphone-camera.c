@@ -29,11 +29,6 @@
 #include <linux/string.h>
 #include <plat/resource.h>
 
-#ifdef CONFIG_ARM_OF
-#include <mach/dt_path.h>
-#include <asm/prom.h>
-#endif
-
 #if defined(CONFIG_VIDEO_OMAP3)
 #include <media/v4l2-int-device.h>
 #include <../drivers/media/video/omap34xxcam.h>
@@ -46,14 +41,14 @@
 #include <linux/spi/cpcap.h>
 #include <linux/spi/cpcap-regbits.h>
 #endif
-#define OV8810_CSI2_CLOCK_POLARITY	0	/* +/- pin order */
-#define OV8810_CSI2_DATA0_POLARITY	0	/* +/- pin order */
-#define OV8810_CSI2_DATA1_POLARITY	0	/* +/- pin order */
-#define OV8810_CSI2_CLOCK_LANE		1	 /* Clock lane position: 1 */
-#define OV8810_CSI2_DATA0_LANE		2	 /* Data0 lane position: 2 */
-#define OV8810_CSI2_DATA1_LANE		3	 /* Data1 lane position: 3 */
-#define OV8810_CSI2_PHY_THS_TERM	1  /* GVH */
-#define OV8810_CSI2_PHY_THS_SETTLE	21  /* GVH */
+#define OV8810_CSI2_CLOCK_POLARITY	0
+#define OV8810_CSI2_DATA0_POLARITY	0
+#define OV8810_CSI2_DATA1_POLARITY	0
+#define OV8810_CSI2_CLOCK_LANE		1
+#define OV8810_CSI2_DATA0_LANE		2
+#define OV8810_CSI2_DATA1_LANE		3
+#define OV8810_CSI2_PHY_THS_TERM	1
+#define OV8810_CSI2_PHY_THS_SETTLE	21
 #define OV8810_CSI2_PHY_TCLK_TERM	0
 #define OV8810_CSI2_PHY_TCLK_MISS	1
 #define OV8810_CSI2_PHY_TCLK_SETTLE	14
@@ -74,18 +69,13 @@
 #define CAM_IOMUX_FUNC_MODE (OMAP343X_PADCONF_INPUT_ENABLED | \
 				OMAP343X_PADCONF_MUXMODE0)
 
-#define CAM_MAX_REGS 5
-#define CAM_MAX_REG_NAME_LEN 8
+static struct regulator *regulator_vcam;
+static struct regulator *regulator_vwlan1;
 
+static int  mapphone_camera_reg_power(bool);
 static void mapphone_camera_lines_safe_mode(void);
-static void mapphone_camera_lines_func_mode(void);
 static void mapphone_camera_mipi_lines_safe_mode(void);
 static void mapphone_camera_mipi_lines_func_mode(void);
-static int  mapphone_camera_reg_power(bool);
-static void mapphone_init_reg_list(void);
-static void mapphone_init_flash_list(void);
-/* devtree regulator support */
-static char regulator_list[CAM_MAX_REGS][CAM_MAX_REG_NAME_LEN];
 static enum v4l2_power previous_power = V4L2_POWER_OFF;
 
 #ifdef CONFIG_VIDEO_OMAP3_HPLENS
@@ -183,7 +173,6 @@ static int ov8810_sensor_power_set(struct device *dev, enum v4l2_power power)
 
 	struct isp_csi2_lanes_cfg lanecfg;
 	struct isp_csi2_phy_cfg phyconfig;
-	/*Basic turn on operation is will be first one time executed.*/
 	int error = 0;
 	static int cam_first_poweron = 1;
 
@@ -202,9 +191,11 @@ static int ov8810_sensor_power_set(struct device *dev, enum v4l2_power power)
 		msleep(1);
 
 		isp_set_xclk(0, OMAP34XXCAM_XCLK_A);
+
 #if defined(CONFIG_LEDS_FLASH_RESET)
 		bd7885_device_disable();
 #endif
+
 		mapphone_camera_mipi_lines_safe_mode();
 	break;
 	case V4L2_POWER_ON:
@@ -265,11 +256,6 @@ static int ov8810_sensor_power_set(struct device *dev, enum v4l2_power power)
 				 */
 				msleep(20);
 			}
-
-#if defined(CONFIG_LEDS_FLASH_RESET)
-			bd7885_device_enable();
-#endif
-
 		}
 
 		if (cam_first_poweron) {
@@ -303,7 +289,7 @@ static int ov8810_sensor_power_set(struct device *dev, enum v4l2_power power)
 
 			/* Let power supplies settle.  Some hardware have large
 			 * filter caps on the VCAM rail.
-			*/
+			 */
 			msleep(10);
 
 			isp_set_xclk(OV8810_XCLK_27MHZ, OMAP34XXCAM_XCLK_A);
@@ -347,22 +333,16 @@ struct ov8810_platform_data mapphone_ov8810_platform_data = {
 	.default_regs   = NULL,
 };
 
-#endif  /* #ifdef CONFIG_VIDEO_OV8810*/
+#endif
 
 int mapphone_camera_reg_power(bool enable)
 {
-	static struct regulator *regulator[CAM_MAX_REGS];
 	static bool reg_resource_acquired;
-	int i, error;
-
-    error = 0;
-
-	static struct regulator *regulator_vcam;
-	static struct regulator *regulator_vwlan1;
+	int error = 0;
 
 	if (reg_resource_acquired == false && enable) {
 
-		/* turn on VWLAN1 power */
+		/* turn on vwlan1 power */
 		if (regulator_vwlan1 != NULL) {
 			pr_warning("%s: Already have "\
 					"regulator_vwlan1 \n", __func__);
@@ -382,7 +362,7 @@ int mapphone_camera_reg_power(bool enable)
 			return -EIO;
 		}
 
-		/* turn on VCAM power */
+		/* turn on vcam power */
 		if (regulator_vcam != NULL) {
 			pr_warning("%s: Already have "\
 					"regulator_vcam\n", __func__);
@@ -403,6 +383,11 @@ int mapphone_camera_reg_power(bool enable)
 		}
 
 		mdelay(5);
+
+#if defined(CONFIG_LEDS_FLASH_RESET)
+				cpcap_direct_misc_write(CPCAP_REG_GPIO0,\
+					CPCAP_BIT_GPIO0DRV, CPCAP_BIT_GPIO0DRV);
+#endif
 
 		reg_resource_acquired = true;
 
@@ -433,6 +418,11 @@ int mapphone_camera_reg_power(bool enable)
 					"initialized\n", __func__);
 			return -EIO;
 		}
+
+#if defined(CONFIG_LEDS_FLASH_RESET)
+			cpcap_direct_misc_write(CPCAP_REG_GPIO0,\
+				0, CPCAP_BIT_GPIO0DRV);
+#endif
 
 		reg_resource_acquired = false;
 	} else {
@@ -489,7 +479,6 @@ void mapphone_camera_mipi_lines_func_mode(void)
 
 void __init mapphone_camera_init(void)
 {
-	printk(KERN_INFO "mapphone_camera_init: MIPI camera\n");
 	omap_cfg_reg(AD17_34XX_CSI2_DX0);
 	omap_cfg_reg(AE18_34XX_CSI2_DY0);
 	omap_cfg_reg(AD16_34XX_CSI2_DX1);

@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.32.54
-# Tue Jan 17 21:46:07 2012
+# Wed Jan 18 02:02:12 2012
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -1809,11 +1809,12 @@ CONFIG_LEDS_SHOLEST=y
 # CONFIG_LEDS_DISPLAY is not set
 # CONFIG_LEDS_KPAD is not set
 CONFIG_LEDS_AF_LED=y
+CONFIG_LEDS_FLASH_RESET=y
 # CONFIG_LEDS_LM3554 is not set
 CONFIG_LEDS_LM3530=y
 # CONFIG_LEDS_LM3559 is not set
-# CONFIG_LEDS_BD7885 is not set
-# CONFIG_LEDS_BU9847 is not set
+CONFIG_LEDS_BD7885=y
+CONFIG_LEDS_BU9847=y
 
 #
 # LED Triggers
