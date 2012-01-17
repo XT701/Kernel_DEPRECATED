@@ -1542,7 +1542,7 @@ static int mt9p012_set_lens_correction(struct mt9p012_lsc_params *lsc,
 	if (sensor->power_on) {
 		if (lsc->enable_lens_correction) {
 			/* Lock VDD1 to MAX for 720p mode */
-			//sensor->pdata->lock_cpufreq(CPU_CLK_LOCK);
+			sensor->pdata->lock_cpufreq(CPU_CLK_LOCK);
 			err |= mt9p012_write_reg(c, MT9P012_16BIT,
 				REG_SC_ENABLE, 0x0000);
 
@@ -2664,7 +2664,7 @@ static int ioctl_s_power(struct v4l2_int_device *s, enum v4l2_power new_power)
 err_on:
 		sensor->power_on = false;
 		sensor->pdata->power_set(sensor->dev, V4L2_POWER_OFF);
-		//sensor->pdata->lock_cpufreq(CPU_CLK_UNLOCK);
+		sensor->pdata->lock_cpufreq(CPU_CLK_UNLOCK);
 		break;
 	case V4L2_POWER_STANDBY:
 		if (sensor->detected)
@@ -2773,7 +2773,7 @@ static int mt9p012_probe(struct i2c_client *client,
 
 	sensor->pdata->power_set = pdata->power_set;
 	sensor->pdata->priv_data_set = pdata->priv_data_set;
-	//sensor->pdata->lock_cpufreq = pdata->lock_cpufreq;   /* 720p mode */
+	sensor->pdata->lock_cpufreq = pdata->lock_cpufreq;   /* 720p mode */
 
 	/* Set sensor default values */
 	sensor->timeperframe.numerator = 1;

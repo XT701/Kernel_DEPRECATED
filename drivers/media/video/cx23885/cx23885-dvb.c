@@ -693,7 +693,7 @@ static int dvb_register(struct cx23885_tsport *port)
 			static struct xc2028_ctrl ctl = {
 				.fname   = XC3028L_DEFAULT_FIRMWARE,
 				.max_len = 64,
-				.demod   = XC3028_FE_DIBCOM52,
+				.demod   = 5000,
 				/* This is true for all demods with
 					v36 firmware? */
 				.type    = XC2028_D2633,
@@ -940,7 +940,7 @@ int cx23885_dvb_register(struct cx23885_tsport *port)
 	int err, i;
 
 	/* Here we need to allocate the correct number of frontends,
-	 * as reflected in the cards struct. The reality is that currently
+	 * as reflected in the cards struct. The reality is that currrently
 	 * no cx23885 boards support this - yet. But, if we don't modify this
 	 * code then the second frontend would never be allocated (later)
 	 * and fail with error before the attach in dvb_register().
