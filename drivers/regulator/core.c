@@ -1258,35 +1258,6 @@ static int _regulator_enable(struct regulator_dev *rdev)
 	return 0;
 }
 
-static int _regulator_enable_(struct regulator_dev *rdev)
-{
-	int ret;
-
-	/* do we need to enable the supply regulator first */
-	if (rdev->supply) {
-		ret = _regulator_enable(rdev->supply);
-		if (ret < 0) {
-			printk(KERN_ERR "%s: failed to enable %s: %d\n",
-			       __func__, rdev->desc->name, ret);
-			return ret;
-		}
-	}
-
-	/* check voltage and requested load before enabling */
-	if (rdev->constraints &&
-	    (rdev->constraints->valid_ops_mask & REGULATOR_CHANGE_DRMS))
-		drms_uA_update(rdev);
-
-			printk(KERN_ERR "%s: is_enabled() failed for %s: %d\n",
-			       __func__, rdev->desc->name, ret);
-			return ret;
-		/* Fallthrough on positive return values - already enabled */
-
-	rdev->use_count++;
-
-	return 0;
-}
-
 /**
  * regulator_enable - enable regulator output
  * @regulator: regulator source
@@ -1309,18 +1280,6 @@ int regulator_enable(struct regulator *regulator)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(regulator_enable);
-
-int regulator_enable_(struct regulator *regulator)
-{
-	struct regulator_dev *rdev = regulator->rdev;
-	int ret = 0;
-
-	mutex_lock(&rdev->mutex);
-	ret = _regulator_enable_(rdev);
-	mutex_unlock(&rdev->mutex);
-	return ret;
-}
-EXPORT_SYMBOL_GPL(regulator_enable_);
 
 /* locks held by regulator_disable() */
 static int _regulator_disable(struct regulator_dev *rdev)

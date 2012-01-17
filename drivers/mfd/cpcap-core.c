@@ -246,6 +246,10 @@ static int cpcap_reboot(struct notifier_block *this, unsigned long code,
 	 * event.
 	 */
 	cpcap_regacc_write(misc_cpcap, CPCAP_REG_CRM, 0, 0x3FFF);
+
+	/* always mask TODAM interrupt due to auto power on issue */
+	cpcap_regacc_write(misc_cpcap, CPCAP_REG_INTM3, CPCAP_BIT_TODA_M,
+		CPCAP_BIT_TODA_M);
 	mdelay(100);
 
 	return result;
