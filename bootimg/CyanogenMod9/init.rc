@@ -4,11 +4,11 @@ sysclktz 0
 
 loglevel 3
 
-    export PATH /sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin
-    export LD_LIBRARY_PATH /vendor/lib:/system/lib
+    export PATH /sbin:/system/sbin:/system/bin:/system/xbin
+    export LD_LIBRARY_PATH /system/lib
     export ANDROID_BOOTLOGO 1
     export ANDROID_ROOT /system
-    export ANDROID_ASSETS /vendor/app:/system/app 
+    export ANDROID_ASSETS /system/app
     export ANDROID_DATA /data
     export EXTERNAL_STORAGE /mnt/sdcard
     export ASEC_MOUNTPOINT /mnt/asec
@@ -18,8 +18,6 @@ loglevel 3
     export TERMINFO /system/etc/terminfo
 
     symlink /system/etc /etc
-    
-    symlink /system/vendor /vendor 
 
     mkdir /mnt 0775 root system
     mkdir /mnt/sdcard 0000 system system
@@ -223,13 +221,13 @@ on boot
     chown system system /sys/kernel/ipv4/tcp_rmem_max
     chown root radio /proc/cmdline
 
-    setprop net.tcp.buffersize.default 4096,87380,110208,4096,16384,110208
+    setprop net.tcp.buffersize.default 4094,87380,262144,4096,16384,262144
     setprop net.tcp.buffersize.wifi 524288,1048576,2097152,262144,524288,1048576
     setprop net.tcp.buffersize.lte 524288,1048576,2097152,262144,524288,1048576
-    setprop net.tcp.buffersize.umts 4094,87380,110208,4096,16384,110208
+    setprop net.tcp.buffersize.umts 4094,87380,262144,4096,16384,262144
     setprop net.tcp.buffersize.hspa 4094,87380,262144,4096,16384,262144
-    setprop net.tcp.buffersize.edge 4093,26280,35040,4096,16384,35040
-    setprop net.tcp.buffersize.gprs 4092,8760,11680,4096,8760,11680 
+    setprop net.tcp.buffersize.edge 4094,87380,262144,4096,16384,262144
+    setprop net.tcp.buffersize.gprs 4094,87380,262144,4096,16384,262144
 
     setprop system_init.startsurfaceflinger 0
     exec /system/bin/sysinit

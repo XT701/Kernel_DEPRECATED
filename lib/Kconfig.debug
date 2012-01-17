@@ -903,9 +903,6 @@ config FAULT_INJECTION_STACKTRACE_FILTER
 	select FRAME_POINTER if !PPC && !S390
 	help
 	  Provide stacktrace filter for fault-injection capabilities
-	  
-config HAVE_PSRWLOCK_ASM_CALL
-	def_bool n
 
 config LATENCYTOP
 	bool "Latency measuring infrastructure"
