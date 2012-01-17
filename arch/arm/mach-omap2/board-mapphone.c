@@ -77,7 +77,7 @@
 #include <linux/adp5588_keypad.h>
 #endif
 
-#ifdef CONFIG_VIDEO_OLDOMAP3
+#ifdef CONFIG_VIDEO_OMAP3
 #include <media/v4l2-int-device.h>
 #if defined(CONFIG_VIDEO_MT9P012) || defined(CONFIG_VIDEO_MT9P012_MODULE)
 #include <media/mt9p012.h>
@@ -2081,7 +2081,7 @@ static void __init mapphone_init(void)
 	mapphone_als_init();
 	mapphone_panel_init();
 	mapphone_sensors_init();
-	//mapphone_camera_init();
+	mapphone_camera_init();
 	mapphone_touch_init();
 	mapphone_audio_init();
 	usb_musb_init();
