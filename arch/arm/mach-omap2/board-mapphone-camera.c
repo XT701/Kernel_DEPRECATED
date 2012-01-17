@@ -192,10 +192,6 @@ static int ov8810_sensor_power_set(struct device *dev, enum v4l2_power power)
 
 		isp_set_xclk(0, OMAP34XXCAM_XCLK_A);
 
-#if defined(CONFIG_LEDS_FLASH_RESET)
-		bd7885_device_disable();
-#endif
-
 		mapphone_camera_mipi_lines_safe_mode();
 	break;
 	case V4L2_POWER_ON:
@@ -489,8 +485,11 @@ void __init mapphone_camera_init(void)
 	omap_cfg_reg(AH17_34XX_CAM_D1_ST);
 	omap_cfg_reg(H2_34XX_GPMC_A3);
 
-	if (gpio_request(GPIO_FLASH_READY, "xenon flash ready pin") != 0)
+	if (gpio_request(GPIO_FLASH_READY, "xenon flash ready pin") != 0){
 		pr_err("%s: Xenon flash ready pin control failure.\n",__func__);
+	}else{
+		printk("Xenon flash ready pin control succeed.");
+	}
 
 	gpio_direction_input(GPIO_FLASH_READY);
 	mapphone_camera_mipi_lines_safe_mode();
