@@ -53,7 +53,7 @@ struct vpss_hw_ops {
 	int (*enable_clock)(enum vpss_clock_sel clock_sel, int en);
 	/* select input to ccdc */
 	void (*select_ccdc_source)(enum vpss_ccdc_source_sel src_sel);
-	/* clear wbl overflow bit */
+	/* clear wbl overlflow bit */
 	int (*clear_wbl_overflow)(enum vpss_wbl_sel wbl_sel);
 };
 
