@@ -80,11 +80,11 @@ static struct omap_opp omap34xx_mpu_rate_table[] = {
 	/*OPP3*/
 	{S500M, VDD1_OPP3, 0x30},
 	/*OPP4*/
-	{S550M, VDD1_OPP4, 0x36},
+	{S550M, VDD1_OPP4, 0x32},
 	/*OPP5*/
-	{S720M, VDD1_OPP5, 0x40},
+	{S720M, VDD1_OPP5, 0x3D},
 	/*OPP6*/
-	{S800M, VDD1_OPP6, 0x44},
+	{S800M, VDD1_OPP6, 0x3E},
 };
 
 static struct omap_opp omap34xx_l3_rate_table[] = {
