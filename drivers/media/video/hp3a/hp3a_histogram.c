@@ -114,9 +114,9 @@ static void hp3a_histogram_isr(unsigned long status, isp_vbq_callback_ptr arg1,
 	if (unlikely(g_tc.v4l2_streaming == 0))
 		return;
 
-	if (hp3a_dequeue(&g_tc.hist_hw_queue,  &ibuffer) == 0) {
+	if (hp3a_dequeue_irqsave(&g_tc.hist_hw_queue, &ibuffer) == 0) {
 		/* If there is a buffer available then fill it. */
-		hist_buffer = (u32 *)phys_to_virt(
+		hist_buffer = (u32 *)phys_to_virt( \
 			page_to_phys(ibuffer->pages[0]));
 
 		omap_writel((omap_readl(ISPHIST_CNT)) | \
@@ -130,8 +130,12 @@ static void hp3a_histogram_isr(unsigned long status, isp_vbq_callback_ptr arg1,
 	} else {
 		/* There are no buffers availavle so just */
 		/* clear internal histogram memory. */
+		omap_writel((omap_readl(ISPHIST_CNT)) | \
+			ISPHIST_CNT_CLR_EN, ISPHIST_CNT);
 		for (i = g_tc.hist_bin_size; i--;)
 			omap_writel(0, ISPHIST_DATA);
+		omap_writel((omap_readl(ISPHIST_CNT)) & ~ISPHIST_CNT_CLR_EN,
+			ISPHIST_CNT);
 	}
 
 	/* Set memory HW memory address and enable. */

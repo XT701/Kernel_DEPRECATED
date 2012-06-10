@@ -70,7 +70,7 @@ void hp3a_enable_raw(unsigned long buffer_addr)
 		/* ISPCCDC_SYN_MODE must be set last. */
 		omap_writel((omap_readl(ISPCCDC_SYN_MODE) |
 				ISPCCDC_SYN_MODE_WEN |
-				ISPCCDC_SYN_MODE_EXWEN |
+				/* ISPCCDC_SYN_MODE_EXWEN | */
 				ISPCCDC_SYN_MODE_VP2SDR),
 				ISPCCDC_SYN_MODE);
 	}

@@ -234,6 +234,7 @@ struct hp3a_statistics {
 	u32 frame_id;
 	u32 exposure;
 	u16 gain;
+	u16 fps;
 	u16 raw_width;
 	u16 raw_height;
 	int hist_stat_index;
@@ -259,6 +260,7 @@ struct hp3a_context {
 	int raw_frequency;
 	int raw_cap_sched_count;
 	int isp_ctx_saved;
+	int sensor_req_reset_count;
 	u8 exposure_sync;
 	u8 gain_sync;
 	u32 hist_bin_size;
