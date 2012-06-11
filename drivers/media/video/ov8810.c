@@ -26,8 +26,8 @@
 #define MOD_NAME "OV8810: "
 
 #define I2C_M_WR 0
-#define CPU_CLK_LOCK	 1
-#define CPU_CLK_UNLOCK   0 
+#define CPU_CLK_LOCK    1
+#define CPU_CLK_UNLOCK  0
 
 /* OV8810 clock related parameters */
 struct ov8810_clk_freqs {
@@ -216,7 +216,7 @@ static struct ov8810_sensor_settings sensor_settings[] = {
 		   MCLK = 27Mhz, FPS = 30, Blanking = 10msec */
 	{
 		.clk = {
-			.pll_mult = 44,
+			.pll_mult = 43, /*44 causes pink vf, 42 RF spurs*/
 			.pll_pre_div = 2,
 			.vt_sys_div = 2,
 			.op_sys_div = 4,
@@ -225,7 +225,7 @@ static struct ov8810_sensor_settings sensor_settings[] = {
 			.rp_clk_div = 2,
 		},
 		.frame = {
-			.frame_len_lines_min = 845,
+			.frame_len_lines_min = 806,
 			.line_len_pck_min = 2344,
 			.x_addr_start = 0,
 			.x_addr_end = 3311,
@@ -248,9 +248,9 @@ static struct ov8810_sensor_settings sensor_settings[] = {
 	},
 
 	/* SIZE_1_5M */
-		/* 2-lane, RAW 10, PCLK = 75.6MHz, MIPI_CLK = 312MHz,
+		/* 2-lane, RAW 10, PCLK = 75.6MHz, MIPI_CLK = 378MHz,
 		   MIPI_PCLK = 1.25x75.6 = 94.5MHz,
-		   MCLK = 27Mhz, FPS = 26, Blanking = 10ms */
+		   MCLK = 27Mhz, FPS = 30, Blanking = 5ms */
 	{
 		.clk = {
 			.pll_mult = 56,
@@ -262,7 +262,7 @@ static struct ov8810_sensor_settings sensor_settings[] = {
 			.rp_clk_div = 1,
 		},
 		.frame = {
-			.frame_len_lines_min = 1244,
+			.frame_len_lines_min = 1079,
 			.line_len_pck_min = 2336,
 			.x_addr_start = 4,
 			.x_addr_end = 3291,
@@ -274,7 +274,7 @@ static struct ov8810_sensor_settings sensor_settings[] = {
 			.h_subsample = 2,
 			.min_time_per_frame = {
 				.numerator = 1,
-				.denominator = 26,
+				.denominator = 30,
 			},
 		},
 		.mipi = {
@@ -285,12 +285,12 @@ static struct ov8810_sensor_settings sensor_settings[] = {
 	},
 
 	/* SIZE_2M */
-		/* 2-lane, RAW 10, PCLK = 75.6MHz, MIPI_CLK = 312MHz,
-		   MIPI_PCLK = 1.25x75.6 = 94.5MHz,
-		   MCLK = 27Mhz, FPS = 21, Blanking = 10ms */
+		/* 2-lane, RAW 10, PCLK = 83.7MHz, MIPI_CLK = 378MHz,
+		   MIPI_PCLK = 1.25x83.7 = 104.6MHz,
+		   MCLK = 27Mhz, FPS = 28, Blanking = 1.8ms */
 	{
 		.clk = {
-			.pll_mult = 56,
+			.pll_mult = 62,
 			.pll_pre_div = 2,
 			.vt_sys_div = 2,
 			.op_sys_div = 2,
@@ -299,7 +299,7 @@ static struct ov8810_sensor_settings sensor_settings[] = {
 			.rp_clk_div = 1,
 		},
 		.frame = {
-			.frame_len_lines_min = 1552,
+			.frame_len_lines_min = 1288,
 			.line_len_pck_min = 2320,
 			.x_addr_start = 0,
 			.x_addr_end = 3295,
@@ -311,7 +311,7 @@ static struct ov8810_sensor_settings sensor_settings[] = {
 			.h_subsample = 2,
 			.min_time_per_frame = {
 				.numerator = 1,
-				.denominator = 21,
+				.denominator = 28,
 			},
 		},
 		.mipi = {
@@ -322,7 +322,7 @@ static struct ov8810_sensor_settings sensor_settings[] = {
 	},
 
 	/* SIZE_8M */
-		/* 2-lane, RAW, 10, PCLK = 75.6MHz, MIPI_CLK = 312MHz,
+		/* 2-lane, RAW, 10, PCLK = 75.6MHz, MIPI_CLK = 378MHz,
 		   MIPI_PCLK = 1.25x75.6 = 94.5MHz,
 		   MCLK = 27Mhz, FPS = 7.685, Blanking = 2ms */
 	{
