@@ -10,7 +10,9 @@ stkwebcam-objs	:=	stk-webcam.o stk-sensor.o
 
 omap2cam-objs	:=	omap24xxcam.o omap24xxcam-dma.o
 
-videodev-objs	:=	v4l2-dev.o v4l2-ioctl.o v4l2-device.o v4l2-subdev.o
+videodev-objs	:=	v4l2-dev.o v4l2-ioctl.o v4l2-device.o
+
+# V4L2 core modules
 
 obj-$(CONFIG_VIDEO_DEV) += videodev.o v4l2-int-device.o
 ifeq ($(CONFIG_COMPAT),y)
@@ -120,7 +122,9 @@ obj-$(CONFIG_VIDEO_OMAP3) += omap34xxcam.o
 
 obj-$(CONFIG_VIDEO_TCM825X) += tcm825x.o
 obj-$(CONFIG_VIDEO_MT9P012)     += mt9p012.o
+obj-$(CONFIG_VIDEO_OV5650)     += ov5650.o
 obj-$(CONFIG_VIDEO_OV8810)     += ov8810.o
+obj-$(CONFIG_VIDEO_MIPI_DLI_TEST) += mipi_dli.o
 obj-$(CONFIG_VIDEO_OMAP3_HP3A) += hp3a/
 obj-$(CONFIG_VIDEO_OMAP3_HPLENS) += hplens.o
 
