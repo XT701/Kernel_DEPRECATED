@@ -182,8 +182,6 @@ void omap34xxcam_vbq_complete(struct videobuf_buffer *vb, void *priv)
 
 #if !defined(CONFIG_VIDEO_OMAP3_HP3A)
 	do_gettimeofday(&vb->ts);
-#else
-	ktime_get_ts((struct timespec *)&vb->ts);
 #endif
 	vb->field_count = atomic_add_return(2, &fh->field_count);
 
