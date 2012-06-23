@@ -33,6 +33,7 @@
 *.xz
 *.patch
 *.gcno
+*.rej
 
 #
 # Top-level generic files
